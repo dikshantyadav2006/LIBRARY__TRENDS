@@ -4,10 +4,10 @@ import profile from "../../assets/images/profile.jpg";
 // ✅ Fetch profile picture function
 const FetchProfilePicture = async (id) => {
   if (!id) return profile; // Return default image if no ID is provided
-
+  const api = import.meta.env.VITE_API_BASE_URL;
   try {
     const response = await axios.get(
-      `http://localhost:5000/student/profile-pic/${id}`,
+      `${api}/student/profile-pic/${id}`,
       { responseType: "arraybuffer" }
     );
     // console.log(response);
@@ -15,7 +15,7 @@ const FetchProfilePicture = async (id) => {
     const mimeType = response.headers["content-type"];
     return `data:${mimeType};base64,${base64String}`;
   } catch (error) {
-    console.error("Error fetching image for user:", id, error);
+    // console.error("Error fetching image for user:", id, error);
     return profile; // Return default image if fetching fails
   }
 };

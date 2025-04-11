@@ -38,8 +38,10 @@ html, body{
   
 }
 
-.text-font-1{
-  font-family: 'Roboto', sans-serif;
+.no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
 }
 
 
@@ -58,6 +60,15 @@ html, body{
   font-optical-sizing: auto;
   font-weight: 500;
   font-style: normal;
+}
+/* ====================================== animations */
+@keyframes scaleInOut {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* ======================================================= */
