@@ -7,7 +7,7 @@ import TextCursor from "./components/animations/TextCursor";
 import ClickSpark from "./components/animations/clickSpark/ClickSpark";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop.jsx";
 import NavbarCard from "./components/navbar/navbarAnimations/NavbarCard.jsx";
-import useNavbarAnimations from "./components/navbar/NavbarAnimations/NavbarAnimations.jsx";
+import useNavbarAnimations from "./components/navbar/navbarAnimations/NavbarAnimations.jsx";
 import LocomotiveScroll from "locomotive-scroll";
 
 const App = () => {
