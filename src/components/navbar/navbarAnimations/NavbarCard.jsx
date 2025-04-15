@@ -9,6 +9,7 @@ const NavbarCard = ({
   showNav,
   navCardToggleButton,
   navCardLinksRefs,
+  handleLogout,
 }) => {
   const [btns, setbtns] = useState([]);
 
@@ -25,7 +26,7 @@ const NavbarCard = ({
         : [];
       setbtns([...baseBtns, ...adminBtns]);
     } else {
-      const authbtns = [{ id: 99, name: "login", path: "/login" }];
+      const authbtns = [{ id: 100, name: "login", path: "/login" },{id:101,name:"signup",path:"/signup"}];
       setbtns([...baseBtns, ...authbtns]);
     }
   }, [loggedInUser]);
@@ -69,22 +70,21 @@ const NavbarCard = ({
   return (
     <div
       className={`${
-        showNav ? "pt-10 lg:pt-20 xl:pt-[20vh]" : ""
-      }flex flex-col bg-gray-600  justify-between pb-1 overflow-hidden  font-[font1] `}
+        showNav ? " " : "rounded-2xl "
+      }flex flex-col   justify-between pb-1 overflow-hidden  font-[font1] pt-10 lg:pt-[10vh]  h-full `}
     >
       <div className=" overflow-hidden links flex flex-col gap-1 mt-10 justify-between items-start pl-[10vw] sm:pl-[50vw] ">
         {btns.map((btn, index) => (
           <NavLink
             onClick={() => {
               navCardToggleButton();
-              //   animate all animations
             }}
             to={btn.path}
             key={index}
             className={({ isActive }) =>
-              `uppercase  h-[9vw] sm:h-[4vw] ${
-                showNav ? "overflow-visible" : " overflow-hidden"
-              }  relative ${isActive ? "" : ""}`
+              `uppercase px-3 rounded-sm h-[9vw] sm:h-[4vw] ${
+                showNav ? "overflow-visible" : " overflow-hidden "
+              }  relative ${isActive ? " bg-[--primary-dark-color] dark:bg-[--primary-light-color] text-[--primary-light-color] transition-colors delay-150  dark:text-[--primary-dark-color] hidden" : "hover:bg-[--secondary-dark-color] hover:dark:bg-[--secondary-light-color] hover:text-[--primary-light-color] hover:dark:text-[--primary-dark-color] transition-colors delay-150"} `
             }
           >
             <h1
@@ -145,6 +145,18 @@ const NavbarCard = ({
             ))}
           </div>
         </div>
+      </div>
+      <div className="md:hidden p-2">
+        {
+          loggedInUser ? (
+            <div className="px-2 py-1 bg-[--primary-dark-color] dark:bg-[--primary-light-color] dark:text-[--primary-dark-color] text-[--primary-light-color] flex flex-wrap flex-col gap-2 rounded-xl  ">
+                   <h1>User:{" @"}{loggedInUser? loggedInUser.username : ""}</h1>
+                   <button onClick={handleLogout} className=" bg-red-600 rounded-full px-2 py-1 capitalize text-white hover:scale-95 w-1/3  "> logout</button>
+            </div>
+          ):(
+            <div className=""></div>
+          )
+        }
       </div>
     </div>
   );

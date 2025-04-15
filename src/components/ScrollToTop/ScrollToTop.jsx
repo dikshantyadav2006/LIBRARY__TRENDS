@@ -9,11 +9,11 @@ const ScrollToTop = () => {
 
   useEffect(() => {
     // Scroll to top and trigger animation
-    window.scrollTo(0, 0);
     setShowAnimation(true);
+    const timeout = setTimeout(() => {
+    window.scrollTo(0, 0);
 
     // Hide animation after it's done
-    const timeout = setTimeout(() => {
       setShowAnimation(false);
     }, 1000); // duration of animation
 

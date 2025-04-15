@@ -4,7 +4,7 @@ import AnimatedThreads from "./sections/AnimatedThreads.jsx";
 import FocusSection from "./sections/FocusSection.jsx";
 import VelocitySection from "./sections/VelocitySection.jsx";
 import { Link, NavLink } from "react-router-dom";
-const Home = ({isDarkMode}) => {
+const Home = ({isDarkMode,loggedInUser}) => {
   const containerRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
@@ -12,7 +12,7 @@ const Home = ({isDarkMode}) => {
   
 
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 300]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 400]);
 
   return (
     <main
@@ -25,7 +25,7 @@ const Home = ({isDarkMode}) => {
       {/* Intro Section */}
       <motion.section
         style={{ y }}
-        className="relative z-10 flex flex-col items-center justify-center h-[100vh] text-center px-4"
+        className="relative z-10 flex flex-col items-center justify-evenly h-[100vh] text-center px-4 "
       >
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-[--dark-color] dark:text-[--light-color] mb-4">
           Welcome to the Learning Library
@@ -33,6 +33,28 @@ const Home = ({isDarkMode}) => {
         <p className="text-lg sm:text-xl text-[--dark-color] dark:text-[--light-color] max-w-2xl">
           Unlock your focus, build habits, and explore the silence of deep learning.
         </p>
+        {
+
+        }
+        <div className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] w-full md:w-1/2 p-4 rounded-lg relative" >
+            <div className="d">
+              { loggedInUser ? (
+                <Link to="/dashboard">
+                  <p className="flex-shrink-0 absolute left-[5px] top-0 transform -translate-y-1/2  bg-[--primary-light-color] dark:bg-[--primary-dark-color] px-2 py-1 rounded-lg ">Make Decisions. Move Forward.</p>
+
+                  <button className="btn btn-primary">Dashboard</button>
+                </Link>
+              ) : (
+                <Link className="flex justify-center items-center " to="/login">
+                  <p className="flex-shrink-0 absolute left-[5px] top-0 transform -translate-y-1/2  bg-[--primary-light-color] dark:bg-[--primary-dark-color] px-2 py-1 rounded-lg ">Power Your Next Move.</p>
+                <button className="btn btn-primary bg-green-700 text-white px-2 py-1 rounded-xl hover:scale-95 ">Login or Signup</button>
+            </Link>
+              )
+
+              }
+               
+            </div>
+        </div>
       </motion.section>
 
       {/* Focus Section */}

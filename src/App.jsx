@@ -70,6 +70,7 @@ const App = () => {
 
       if (res.ok) {
         setUser(null); // Clear user state after logout
+        setLoggedInUser(null);
       }
     } catch (error) {
       console.error("Logout failed:", error);
@@ -120,6 +121,7 @@ const App = () => {
         } border-b-2 border-[--dark-color] dark:border-[--light-color] `}
       >
         <NavbarCard
+          handleLogout={handleLogout}
           loggedInUser={user}
           showNav={showNav}
           navCardLinksRefs={navCardLinksRefs}

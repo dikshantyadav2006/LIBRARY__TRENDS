@@ -35,7 +35,7 @@ const NavbarMain = ({
         navCardToggleButton();
       }
     }}
-     className={`${showNav?" cursor-pointer":""} flex justify-between items-center p-2 sticky top-0 left-0 w-full bg-[--primary-light-color] dark:bg-[--primary-dark-color] text-[--dark-color] dark:text-[--light-color] shadow-2xl  dark:shadow-[#1d1e20] z-10  lg:rounded-t-[3vw] lg:rounded-b-[3vw] lg:px-[3vw] overflow-hidden`}>
+     className={`${showNav?" cursor-pointer transition-transform duration-300  delay-1000 transform lg:-translate-y-[8vh] ":"transition-transform duration-300  delay-1000 transform translate-y-[0]"} flex justify-between items-center p-2 sticky top-0 left-0 w-full bg-[--primary-light-color] dark:bg-[--primary-dark-color] text-[--dark-color] dark:text-[--light-color] shadow-2xl  dark:shadow-[#1d1e20] z-10  lg:rounded-t-[3vw] lg:rounded-b-[3vw] lg:px-[3vw] overflow-hidden`}>
       <Link to="/">
         <h1 className="text-2xl uppercase font-[font1] font-black  ">
           sai library

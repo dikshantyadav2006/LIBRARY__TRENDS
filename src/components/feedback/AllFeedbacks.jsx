@@ -19,7 +19,6 @@ const AllFeedbacks = ({ loggedInUser }) => {
     try {
       const data = await feedbackApi.getAllFeedbacks();
       setFeedbacks(data);
-      console.log("Feedbacks loaded:", data);
     } catch (err) {
       console.error("Error loading feedbacks:", err.message);
     } finally {
@@ -83,7 +82,7 @@ const AllFeedbacks = ({ loggedInUser }) => {
     };
   }, []);
   
-  if (loading) return <div className="text-center mt-10">Loading...</div>;
+  if (loading) return <FeedbackSkeleton/>;
 
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6">
@@ -198,6 +197,59 @@ const AllFeedbacks = ({ loggedInUser }) => {
               </div>
             </div>
           )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// FeedbackSkeleton.jsx or wherever you define it
+const FeedbackSkeleton = () => {
+  return (
+    <div className="max-w-3xl mx-auto mt-10 space-y-6">
+      {[...Array(3)].map((_, idx) => (
+        <div
+          key={idx}
+          className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] text-[--primary-dark-color] dark:text-[--primary-light-color] shadow rounded-xl p-5 border border-gray-200 animate-pulse"
+        >
+          <div className="flex items-center justify-between">
+            <div className="h-4 bg-gray-300 rounded w-32"></div>
+            <div className="flex items-center gap-1">
+              <div className="w-5 h-5 bg-gray-300 rounded-full"></div>
+              <div className="h-3 bg-gray-300 rounded w-6"></div>
+            </div>
+          </div>
+
+          <div className="mt-3 h-4 bg-gray-300 rounded w-5/6"></div>
+          <div className="mt-2 h-4 bg-gray-300 rounded w-4/6"></div>
+
+          <div className="mt-3 h-3 bg-gray-300 rounded w-32"></div>
+
+          <div className="mt-4 space-y-3">
+            {[...Array(2)].map((_, cIdx) => (
+              <div key={cIdx} className="ml-4 text-sm border-l pl-2 pb-3">
+                <div className="h-3 bg-gray-300 rounded w-24 mb-1"></div>
+                <div className="h-3 bg-gray-300 rounded w-3/4"></div>
+
+                <div className="ml-4 mt-2 space-y-1">
+                  <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+                </div>
+
+                <div className="h-3 bg-gray-300 rounded w-16 mt-2"></div>
+
+                <div className="mt-2 ml-4">
+                  <div className="h-6 bg-gray-200 rounded w-full mb-1"></div>
+                  <div className="h-6 bg-gray-300 rounded w-16"></div>
+                </div>
+              </div>
+            ))}
+
+            <div className="ml-4">
+              <div className="h-10 bg-gray-200 rounded w-full mb-1"></div>
+              <div className="h-6 bg-gray-300 rounded w-20"></div>
+            </div>
+          </div>
         </div>
       ))}
     </div>

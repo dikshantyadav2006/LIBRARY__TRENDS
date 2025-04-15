@@ -13,7 +13,7 @@ import EditUserProfile from "../components/user/EditUserProfile/EditUserProfile"
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
-    <Route path="/" element={<Home user={user} isDarkMode={isDarkMode} />} />
+    <Route path="/" element={<Home loggedInUser={user} isDarkMode={isDarkMode} />} />
     <Route path="/feedback" element={<Feedback loggedInUser={user} />} />
     <Route
       path="/login"

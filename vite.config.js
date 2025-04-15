@@ -8,7 +8,6 @@ export default defineConfig({
     host: '0.0.0.0', // Allows external access
     port: 5173,
     strictPort: true,
- // Allow all ngrok domains
   },
 
 })
