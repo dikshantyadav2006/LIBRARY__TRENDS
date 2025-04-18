@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   const [showAnimation, setShowAnimation] = useState(true);
+  useEffect(() => {
+    // Hide animation on initial load
+    setShowAnimation(false);
+  }, []);
 
   useEffect(() => {
     // Scroll to top and trigger animation

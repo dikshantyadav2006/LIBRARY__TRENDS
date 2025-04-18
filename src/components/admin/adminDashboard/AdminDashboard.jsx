@@ -56,7 +56,6 @@ const AdminDashboard = () => {
       });
 
       const allUsers = res.data;
-
       const newUsers = allUsers.slice(users.length, users.length + 10);
       const usersWithPics = await Promise.all(
         newUsers.map(async (user) => {
@@ -65,7 +64,14 @@ const AdminDashboard = () => {
         })
       );
 
-      setUsers((prev) => [...prev, ...usersWithPics]);
+      setUsers((prev) => {
+        // Merge new users with existing users
+        console.log("processing -----------------------");
+        const userMap = new Map(prev.map((u) => [u._id, u]));
+        usersWithPics.forEach((u) => userMap.set(u._id, u));
+        return Array.from(userMap.values());
+      });
+      
       setHasMore(users.length + 10 < allUsers.length);
     } catch (error) {
       console.error("Error fetching users:", error);

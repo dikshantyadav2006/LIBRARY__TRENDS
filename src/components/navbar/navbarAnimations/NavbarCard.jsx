@@ -71,7 +71,7 @@ const NavbarCard = ({
     <div
       className={`${
         showNav ? " " : "rounded-2xl "
-      }flex flex-col   justify-between pb-1 overflow-hidden  font-[font1] pt-10 lg:pt-[10vh]  h-full `}
+      }flex flex-col   justify-between  pb-1 overflow-hidden  font-[font1] pt-10 lg:pt-[10vh]  h-full `}
     >
       <div className=" overflow-hidden links flex flex-col gap-1 mt-10 justify-between items-start pl-[10vw] sm:pl-[50vw] ">
         {btns.map((btn, index) => (
@@ -146,7 +146,7 @@ const NavbarCard = ({
           </div>
         </div>
       </div>
-      <div className="md:hidden p-2">
+      <div className="md:hidden p-2 my-auto">
         {
           loggedInUser ? (
             <div className="px-2 py-1 bg-[--primary-dark-color] dark:bg-[--primary-light-color] dark:text-[--primary-dark-color] text-[--primary-light-color] flex flex-wrap flex-col gap-2 rounded-xl  ">
