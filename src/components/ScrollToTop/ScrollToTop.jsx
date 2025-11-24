@@ -15,11 +15,10 @@ const ScrollToTop = () => {
     // Scroll to top and trigger animation
     setShowAnimation(true);
     const timeout = setTimeout(() => {
-    window.scrollTo(0, 0);
-
-    // Hide animation after it's done
+      window.scrollTo(0, 0);
+      // Hide animation after it's done
       setShowAnimation(false);
-    }, 1000); // duration of animation
+    }, 400); // faster route-change animation
 
     return () => clearTimeout(timeout);
   }, [pathname]);
@@ -38,23 +37,23 @@ const ScrollToTop = () => {
             initial={{ scaleY: 0 }}
             animate={{ scaleY: 1 }}
             exit={{ scaleY: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 0.3, delay: 0.05, ease: "easeInOut" }}
             className="origin-top w-screen h-[90vh] bg-[--dark-color] dark:bg-[--light-color]"
           >
             <motion.div
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               exit={{ scaleY: 0 }}
-              transition={{ duration: 0.7, delay: 0.4, ease: "easeInOut" }}
+              transition={{ duration: 0.3, delay: 0.1, ease: "easeInOut" }}
               className="origin-top w-screen h-[70vh] bg-[--light-color] dark:bg-[--dark-color]"
             ></motion.div>
-             <motion.div
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: .51 }}
-            exit={{ scaleY: 0 }}
-            transition={{ duration: 0.7, delay: 0.5, ease: "easeInOut" }}
-            className="origin-top w-screen h-[70vh] bg-[--dark-color] dark:bg-[--light-color]"
-          ></motion.div>
+            <motion.div
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 0.51 }}
+              exit={{ scaleY: 0 }}
+              transition={{ duration: 0.3, delay: 0.15, ease: "easeInOut" }}
+              className="origin-top w-screen h-[70vh] bg-[--dark-color] dark:bg-[--light-color]"
+            ></motion.div>
           </motion.div>
         </motion.div>
       )}

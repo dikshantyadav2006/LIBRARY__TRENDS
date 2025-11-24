@@ -89,7 +89,7 @@ const App = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimateOut(true);
-    }, 1000); // 1 sec delay
+    }, 400); // faster loader exit
 
     return () => clearTimeout(timer);
   }, [loading]);
@@ -129,7 +129,7 @@ const App = () => {
         />
       </div>
       <div
-        className={`fixed left-0 top-0 w-screen h-screen z-[999] bg-[--dark-color] dark:bg-[--light-color] transform transition-transform duration-1000 ${
+        className={`fixed left-0 top-0 w-screen h-screen z-[999] bg-[--dark-color] dark:bg-[--light-color] transform transition-transform duration-400 ${
           animateOut ? "-translate-y-[150%]" : ""
         }`}
       >

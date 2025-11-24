@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import AnimatedThreads from "./sections/AnimatedThreads.jsx";
 import FocusSection from "./sections/FocusSection.jsx";
 import VelocitySection from "./sections/VelocitySection.jsx";
+import SeatDetails from "../seatDetails/SeatDetails.jsx";
 import { Link, NavLink } from "react-router-dom";
 const Home = ({isDarkMode,loggedInUser}) => {
   const containerRef = useRef(null);
@@ -19,8 +19,6 @@ const Home = ({isDarkMode,loggedInUser}) => {
       ref={containerRef}
       className="relative min-h-screen w-full bg-[--light-color] dark:bg-[--dark-color] overflow-x-hidden  duration-1000 z-0 transition-all ease-in-out"
     >
-      {/* Threads Background Animation */}
-      <AnimatedThreads containerRef={containerRef} isDarkMode={isDarkMode} />
 
       {/* Intro Section */}
       <motion.section
@@ -56,6 +54,13 @@ const Home = ({isDarkMode,loggedInUser}) => {
             </div>
         </div>
       </motion.section>
+
+	      {/* Seat grid below intro */}
+	      <section className="relative z-10 flex justify-center items-center min-h-[60vh] my-10">
+	        <div className="w-full max-w-6xl">
+	          <SeatDetails />
+	        </div>
+	      </section>
 
       {/* Focus Section */}
       <section className="relative z-10 flex justify-center items-center min-h-[60vh] my-20">
