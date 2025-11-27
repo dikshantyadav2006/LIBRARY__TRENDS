@@ -60,8 +60,23 @@ const NavbarMain = ({
           handdleClickOnShowNav();
         }}
       >
-        seat
+        Seats
       </NavLink>
+      {user && (
+        <NavLink
+          className={({ isActive }) => {
+            return isActive
+              ? "hidden sm:block bg-[--dark-color] dark:bg-[--light-color] text-[--light-color] dark:text-[--dark-color] transition-colors duration-300 ease-in-out px-2 py-1 rounded-md"
+              : "hidden sm:block";
+          }}
+          to="/my-bookings"
+          onClick={() => {
+            handdleClickOnShowNav();
+          }}
+        >
+          My Bookings
+        </NavLink>
+      )}
       <button
         onClick={() => {
           toggleDarkMode();

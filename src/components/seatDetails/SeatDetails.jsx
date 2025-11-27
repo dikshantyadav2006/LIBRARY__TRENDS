@@ -1,23 +1,71 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const SeatDetails = () => {
+const SeatDetails = ({ loggedInUser }) => {
+  // Month/Year selection (like movie theater)
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [monthLabel, setMonthLabel] = useState("");
+  const [isCurrentMonth, setIsCurrentMonth] = useState(false);
+
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [seatDetails, setSeatDetails] = useState(null);
+  // Filters now use "day" (morning+afternoon) and "night"
   const [filters, setFilters] = useState({
-    morning: false,
-    afternoon: false,
+    day: false,
     night: false,
   });
+  const [selectedShifts, setSelectedShifts] = useState([]);
+  const [isBooking, setIsBooking] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Pro-rated pricing state
+  const [priceInfo, setPriceInfo] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+
+  const navigate = useNavigate();
   const api = import.meta.env.VITE_API_BASE_URL;
 
+  // Fetch available months on component mount
+  useEffect(() => {
+    const fetchAvailableMonths = async () => {
+      try {
+        const res = await axios.get(`${api}/monthly-booking/months`, { withCredentials: true });
+        setAvailableMonths(res.data.months);
+        // Select current month by default
+        if (res.data.months.length > 0) {
+          const currentMonth = res.data.months[0];
+          setSelectedMonth(currentMonth.month);
+          setSelectedYear(currentMonth.year);
+          setMonthLabel(currentMonth.label);
+        }
+      } catch (error) {
+        console.error("Error fetching available months:", error);
+      }
+    };
+    fetchAvailableMonths();
+  }, [api]);
+
+  // Fetch seats when month/year changes
   useEffect(() => {
     const fetchSeats = async () => {
+      if (!selectedMonth || !selectedYear) return;
+
+      setLoading(true);
       try {
-        const res = await axios.get(`${api}/seat`, { withCredentials: true });
-        setSeats(res.data);
+        const res = await axios.get(
+          `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
+          { withCredentials: true }
+        );
+        setSeats(res.data.seats);
+        setSelectedSeat(null);
+        setSeatDetails(null);
+        setSelectedShifts([]);
       } catch (error) {
         console.error("Error fetching seats:", error);
       } finally {
@@ -25,170 +73,780 @@ const SeatDetails = () => {
       }
     };
     fetchSeats();
-  }, []);
+  }, [selectedMonth, selectedYear, api]);
 
   const fetchSeatDetails = async (seatNumber) => {
+    if (!selectedMonth || !selectedYear) return;
+
     try {
-      const res = await axios.get(`${api}/seat/${seatNumber}`, {
-        withCredentials: true,
-      });
+      const res = await axios.get(
+        `${api}/monthly-booking/seat/${seatNumber}?month=${selectedMonth}&year=${selectedYear}`,
+        { withCredentials: true }
+      );
       setSeatDetails(res.data);
+      setSelectedShifts([]); // reset shifts when seat changes
+      setPriceInfo(null);
     } catch (error) {
       console.error("Error fetching seat details:", error);
     }
   };
+
+  // Fetch price when shifts are selected
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (selectedShifts.length === 0 || !selectedMonth || !selectedYear) {
+        setPriceInfo(null);
+        return;
+      }
+
+      setLoadingPrice(true);
+      try {
+        const res = await axios.get(
+          `${api}/payment/price?shiftCount=${selectedShifts.length}&month=${selectedMonth}&year=${selectedYear}`
+        );
+        setPriceInfo(res.data);
+      } catch (error) {
+        console.error("Error fetching price:", error);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+    fetchPrice();
+  }, [selectedShifts, selectedMonth, selectedYear, api]);
 
   const handleSeatClick = (seat) => {
     setSelectedSeat(seat);
     fetchSeatDetails(seat.seatNumber);
   };
 
-  const getSeatColor = (shifts) => {
-    const availableShifts = shifts
-      .filter((shift) => !shift.studentId)
-      .map((shift) => shift.shiftType);
+  const handleMonthChange = (monthData) => {
+    setSelectedMonth(monthData.month);
+    setSelectedYear(monthData.year);
+    setMonthLabel(monthData.label);
+    setIsCurrentMonth(monthData.isCurrent);
+    setError("");
+    setSuccessMessage("");
+    setPriceInfo(null);
+  };
 
-    if (!availableShifts.length) return "bg-red-600 text-white"; // Fully occupied
+  // Toggle shift selection - "day" means both morning + afternoon
+  const toggleShiftSelection = (displayShift, isAvailable) => {
+    if (!isAvailable) return;
 
-    if (availableShifts.length === 1) {
-      return {
-        morning: "bg-yellow-400",
-        afternoon: "bg-blue-400",
-        night: "bg-black text-white",
-      }[availableShifts[0]];
+    if (displayShift === "day") {
+      // Day shift = morning + afternoon combined
+      setSelectedShifts((prev) => {
+        const hasMorning = prev.includes("morning");
+        const hasAfternoon = prev.includes("afternoon");
+        if (hasMorning && hasAfternoon) {
+          // Remove both
+          return prev.filter((s) => s !== "morning" && s !== "afternoon");
+        } else {
+          // Add both
+          const newShifts = prev.filter((s) => s !== "morning" && s !== "afternoon");
+          return [...newShifts, "morning", "afternoon"];
+        }
+      });
+    } else {
+      // Night shift
+      setSelectedShifts((prev) =>
+        prev.includes(displayShift)
+          ? prev.filter((s) => s !== displayShift)
+          : [...prev, displayShift]
+      );
+    }
+  };
+
+  // Check if a shift is blocked by admin
+  const isShiftBlocked = (shift) => {
+    return shift?.status === "blocked" || shift?.blockedByAdmin;
+  };
+
+  // Check if a shift is protected for current user
+  const isShiftProtectedForMe = (shift) => {
+    if (!loggedInUser || !shift) return false;
+    return shift.status === "protected" &&
+           shift.protectedForUser &&
+           shift.protectedForUser === loggedInUser._id;
+  };
+
+  // Check if shift is protected for someone else
+  const isShiftProtectedForOther = (shift) => {
+    if (!shift) return false;
+    if (shift.status !== "protected") return false;
+    // If not logged in, it's protected for "other"
+    if (!loggedInUser) return true;
+    return shift.protectedForUser && shift.protectedForUser !== loggedInUser._id;
+  };
+
+  // Check if "day" shift (morning + afternoon) is available
+  const isDayShiftAvailable = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+
+    // Check basic availability
+    if (!morning || !afternoon) return false;
+    if (morning.status === "booked" && morning.userId) return false;
+    if (afternoon.status === "booked" && afternoon.userId) return false;
+    if (isShiftBlocked(morning) || isShiftBlocked(afternoon)) return false;
+
+    // If protected for someone else, not available
+    if (isShiftProtectedForOther(morning) || isShiftProtectedForOther(afternoon)) return false;
+
+    // If protected for me, it IS available
+    if (isShiftProtectedForMe(morning) || isShiftProtectedForMe(afternoon)) return true;
+
+    return true;
+  };
+
+  // Check if day shift is blocked by admin
+  const isDayShiftBlocked = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+    return isShiftBlocked(morning) || isShiftBlocked(afternoon);
+  };
+
+  // Check if day shift is protected for someone else
+  const isDayShiftProtectedForOther = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+    return isShiftProtectedForOther(morning) || isShiftProtectedForOther(afternoon);
+  };
+
+  // Check if night shift is available (only Floor 1: seats 1-25 can have night shift)
+  const isNightShiftAvailable = (shifts, seatNumber = null) => {
+    // Night shift only available for Floor 1 (seats 1-25)
+    if (seatNumber && seatNumber > 25) return false;
+
+    const night = shifts.find((s) => s.shiftType === "night");
+    if (!night) return false;
+    if (night.status === "booked" && night.userId) return false;
+    if (isShiftBlocked(night)) return false;
+    if (isShiftProtectedForOther(night)) return false;
+
+    return true;
+  };
+
+  // Get floor number for a seat
+  const getFloor = (seatNumber) => {
+    return seatNumber <= 25 ? 1 : 2;
+  };
+
+  // Get who booked the day shift (show if either morning or afternoon is booked)
+  const getDayShiftBookedBy = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+    if (isShiftBlocked(morning) || isShiftBlocked(afternoon)) return null;
+    if (morning?.userId) return morning.userDetails?.fullname || "Someone";
+    if (afternoon?.userId) return afternoon.userDetails?.fullname || "Someone";
+    return null;
+  };
+
+  // Check if entire seat is blocked by admin (all shifts blocked)
+  const isSeatFullyBlocked = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+    const night = shifts.find((s) => s.shiftType === "night");
+    return isShiftBlocked(morning) && isShiftBlocked(afternoon) && isShiftBlocked(night);
+  };
+
+  // Check if seat is protected for someone else
+  const isSeatProtectedForOther = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    const afternoon = shifts.find((s) => s.shiftType === "afternoon");
+    const night = shifts.find((s) => s.shiftType === "night");
+    return (isShiftProtectedForOther(morning) || isShiftProtectedForOther(afternoon)) && isShiftProtectedForOther(night);
+  };
+
+  // Check if seat is protected for me
+  const isSeatProtectedForMe = (shifts) => {
+    const morning = shifts.find((s) => s.shiftType === "morning");
+    return isShiftProtectedForMe(morning);
+  };
+
+  const getSeatColor = (shifts, seatNumber) => {
+    // Check if fully blocked by admin
+    if (isSeatFullyBlocked(shifts)) {
+      return "bg-gray-500 text-white"; // Blocked by owner - Gray
     }
 
-    // Predefined colors for multiple shift availability
-    if (availableShifts.length === 2) {
-      if (
-        availableShifts.includes("morning") &&
-        availableShifts.includes("afternoon")
-      ) {
-        return "bg-gradient-to-r from-yellow-400 to-blue-400";
-      }
-      if (
-        availableShifts.includes("morning") &&
-        availableShifts.includes("night")
-      ) {
-        return "bg-gradient-to-r from-yellow-400 to-gray-800 text-white";
-      }
-      if (
-        availableShifts.includes("afternoon") &&
-        availableShifts.includes("night")
-      ) {
-        return "bg-gradient-to-r from-blue-400 to-gray-800 text-white";
-      }
+    // Check if protected for me (show as purple - my reserved seat)
+    if (isSeatProtectedForMe(shifts)) {
+      return "bg-purple-500 text-white"; // Protected for me - Purple
     }
 
-    // All three shifts available
-    return "bg-gradient-to-r from-yellow-400 via-blue-400 to-gray-800 text-white";
+    // Check if protected for someone else
+    if (isSeatProtectedForOther(shifts)) {
+      return "bg-yellow-500 text-white"; // Reserved by someone - Yellow
+    }
+
+    const dayAvailable = isDayShiftAvailable(shifts);
+    // Night only available for Floor 1 (seats 1-25)
+    const nightAvailable = isNightShiftAvailable(shifts, seatNumber);
+
+    // Check if day is blocked (show as blocked color)
+    if (isDayShiftBlocked(shifts) && !nightAvailable) {
+      return "bg-gray-500 text-white"; // Blocked
+    }
+
+    // Check if day is protected for other
+    if (isDayShiftProtectedForOther(shifts) && !nightAvailable) {
+      return "bg-yellow-500 text-white"; // Reserved
+    }
+
+    if (!dayAvailable && !nightAvailable) return "bg-red-600 text-white"; // Fully occupied
+
+    if (dayAvailable && nightAvailable) {
+      return "bg-gradient-to-r from-green-500 to-green-800 text-white"; // Both available (Green gradient)
+    }
+
+    if (dayAvailable) return "bg-green-500 text-white"; // Day available (Green)
+    if (nightAvailable) return "bg-green-800 text-white"; // Night available (Dark Green)
+
+    return "bg-red-600 text-white";
   };
 
   const handleFilterChange = (shiftType) => {
     setFilters((prev) => ({ ...prev, [shiftType]: !prev[shiftType] }));
   };
+
   const filteredSeats = seats.filter((seat) => {
-    const selectedShifts = Object.keys(filters).filter(
-      (shift) => filters[shift]
-    );
+    const filterShifts = Object.keys(filters).filter((shift) => filters[shift]);
 
-    if (selectedShifts.length === 0) return true; // No filters applied, show all seats
+    if (filterShifts.length === 0) return true; // No filters applied, show all seats
 
-    // Check if the seat has ALL selected shifts available
-    return selectedShifts.every((shift) =>
-      seat.shifts.some((s) => s.shiftType === shift && !s.studentId)
-    );
+    // Check filters - "day" means morning+afternoon, "night" means night
+    return filterShifts.every((shift) => {
+      if (shift === "day") {
+        return isDayShiftAvailable(seat.shifts);
+      } else if (shift === "night") {
+        // Night only for seats 1-30
+        return isNightShiftAvailable(seat.shifts, seat.seatNumber);
+      }
+      return true;
+    });
   });
 
-  if (loading) return <SeatSkeleton />;
+  // Price: Use pro-rated price from API or fallback
+  const totalPrice = priceInfo?.totalPrice || selectedShifts.length * 300;
+  const fullPrice = priceInfo?.fullPrice || selectedShifts.length * 300;
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error("Failed to load Razorpay script"));
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleBookNow = async () => {
+    try {
+      setError("");
+      setSuccessMessage("");
+
+      if (!loggedInUser) {
+        navigate("/login");
+        return;
+      }
+
+      if (!selectedSeat || selectedShifts.length === 0) {
+        setError("Please select a seat and at least one available shift.");
+        return;
+      }
+
+      if (!selectedMonth || !selectedYear) {
+        setError("Please select a month first.");
+        return;
+      }
+
+      setIsBooking(true);
+
+      await loadRazorpayScript();
+
+      const createOrderRes = await axios.post(
+        `${api}/payment/create-order`,
+        {
+          seatNumber: selectedSeat.seatNumber,
+          shiftTypes: selectedShifts,
+          month: selectedMonth,
+          year: selectedYear,
+        },
+        { withCredentials: true }
+      );
+
+      const data = createOrderRes.data;
+
+      const options = {
+        key: data.key,
+        amount: data.amount.toString(),
+        currency: data.currency,
+        name: "SHAI Library",
+        description: `Seat ${data.seatNumber} - ${data.shiftTypes.join(", ")} (${data.monthLabel || monthLabel})`,
+        order_id: data.orderId,
+        handler: async function (response) {
+          try {
+            await axios.post(
+              `${api}/payment/verify`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              { withCredentials: true }
+            );
+
+            setSuccessMessage(`Payment successful! Seat booked for ${monthLabel}`);
+            setSelectedShifts([]);
+            // Refresh seats for the selected month
+            const seatsRes = await axios.get(
+              `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
+              { withCredentials: true }
+            );
+            setSeats(seatsRes.data.seats);
+            if (selectedSeat) {
+              fetchSeatDetails(selectedSeat.seatNumber);
+            }
+          } catch (err) {
+            console.error("Payment verification error:", err);
+            setError(
+              err?.response?.data?.message ||
+                "Payment verification failed. Please contact support."
+            );
+          } finally {
+            setIsBooking(false);
+          }
+        },
+        prefill: {
+          name: loggedInUser?.fullname || "",
+          contact: loggedInUser?.mobile || "",
+        },
+        theme: { color: "#0f766e" },
+        modal: {
+          ondismiss: function () {
+            setError("Payment was cancelled or popup closed. Please try again.");
+            setIsBooking(false);
+          },
+        },
+        retry: {
+          enabled: true,
+          max_count: 3,
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", function (response) {
+        console.error("Razorpay payment.failed:", response.error);
+        const errorMsg =
+          response.error?.description ||
+          response.error?.reason ||
+          "Payment failed. Please try again.";
+        setError(errorMsg);
+        setIsBooking(false);
+      });
+
+      rzp.open();
+    } catch (err) {
+      console.error("Error during booking:", err);
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong while initiating payment. Please try again."
+      );
+      setIsBooking(false);
+    }
+  };
+
+  if (loading && availableMonths.length === 0) return <SeatSkeleton />;
 
   return (
     <div className="p-4 md:p-6 relative z-0">
       <h2 className="text-2xl font-bold text-center mb-4">Seat Availability</h2>
 
+      {/* Month Selector - Like Movie Theater */}
+      <div className="mb-6 bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-4 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-3 text-center">📅 Select Month for Booking</h3>
+        <div className="flex flex-wrap justify-center gap-2">
+          {availableMonths.map((m) => (
+            <button
+              key={`${m.month}-${m.year}`}
+              onClick={() => handleMonthChange(m)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                selectedMonth === m.month && selectedYear === m.year
+                  ? "bg-teal-600 text-white shadow-lg scale-105"
+                  : "bg-gray-200 dark:bg-gray-700 hover:bg-teal-100 dark:hover:bg-teal-900"
+              } ${m.isCurrent ? "ring-2 ring-teal-400" : ""}`}
+            >
+              {m.label}
+              {m.isCurrent && <span className="ml-1 text-xs">(Current)</span>}
+            </button>
+          ))}
+        </div>
+        {monthLabel && (
+          <p className="text-center mt-3 text-sm text-gray-600 dark:text-gray-400">
+            Showing seats for: <strong className="text-teal-600">{monthLabel}</strong>
+          </p>
+        )}
+      </div>
+
+      {loading ? (
+        <SeatSkeleton />
+      ) : (
       <div className="flex flex-col md:flex-row gap-4 flex-wrap justify-between">
         {/* Seat Details First & Sticky on Mobile */}
         {selectedSeat && seatDetails && (
           <div className="w-full md:w-1/3 p-4  rounded-lg  shadow sticky top-[10vh] z-10 bg-[--primary-light-color] dark:bg-[--primary-dark-color]">
-            <h3 className="text-xl font-[font1] tracking-wider  font-bold">
+            <h3 className="text-xl font-[font1] tracking-wider font-bold">
               Seat Details
             </h3>
-            <p className="text-md  mt-2">
-              <strong>Seat Number:</strong> {selectedSeat.seatNumber}
+            <p className="text-md mt-2">
+              <strong>Seat Number:</strong> {getFloor(selectedSeat.seatNumber) === 1 ? selectedSeat.seatNumber : selectedSeat.seatNumber - 25}
+              <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                getFloor(selectedSeat.seatNumber) === 1
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                  : 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+              }`}>
+                Floor {getFloor(selectedSeat.seatNumber)}
+              </span>
+            </p>
+            <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
+              📅 Booking for: <strong>{monthLabel}</strong>
             </p>
             <div className="siftavailable bg-[--light-color] dark:bg-[--dark-color] p-4 pt-6 mt-5 rounded-lg relative">
               <h4 className="text-md font-semibold absolute -top-3 -left-2 bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] py-1 px-2 rounded-full ">
                 Shift Availability
               </h4>
-              {seatDetails.shifts.map((shift) => (
-                <p key={shift.shiftType}>
-                  <strong>
-                    {shift.shiftType.charAt(0).toUpperCase() +
-                      shift.shiftType.slice(1)}
-                    :
-                  </strong>{" "}
-                  {shift.studentId
-                    ? `Occupied by ${shift.userDetails?.fullname || "Unknown"}`
-                    : " Available"}
+
+              {/* Day Shift (Morning + Afternoon combined) */}
+              {(() => {
+                const morning = seatDetails.shifts.find((s) => s.shiftType === "morning");
+                const dayAvailable = isDayShiftAvailable(seatDetails.shifts);
+                const dayBlocked = isDayShiftBlocked(seatDetails.shifts);
+                const dayProtectedForMe = isShiftProtectedForMe(morning);
+                const dayProtectedForOther = isDayShiftProtectedForOther(seatDetails.shifts);
+                const dayBooked = getDayShiftBookedBy(seatDetails.shifts);
+                const isDaySelected = selectedShifts.includes("morning") && selectedShifts.includes("afternoon");
+                return (
+                  <div className={`flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 ${(dayBlocked || dayProtectedForOther) ? 'opacity-60' : ''}`}>
+                    <p>
+                      <strong>☀️ Day Shift:</strong>{" "}
+                      <span className="text-xs text-gray-500">(Morning + Afternoon)</span>
+                      <br />
+                      {dayBlocked
+                        ? <span className="text-gray-500 font-semibold">🚫 Blocked by Owner</span>
+                        : dayProtectedForMe
+                          ? <span className="text-purple-600 font-semibold">🛡️ Protected for You - Book Now!</span>
+                          : dayProtectedForOther
+                            ? <span className="text-yellow-600 font-semibold">⏳ Reserved (expires Day 3)</span>
+                            : dayBooked
+                              ? `Booked by ${dayBooked}`
+                              : <span className="text-green-600">Available</span>}
+                    </p>
+                    <input
+                      type="checkbox"
+                      disabled={!dayAvailable || isBooking || dayBlocked || dayProtectedForOther}
+                      checked={isDaySelected}
+                      onChange={() => toggleShiftSelection("day", dayAvailable)}
+                      className="w-5 h-5 cursor-pointer accent-green-500 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                );
+              })()}
+
+              {/* Night Shift - Only for seats 1-25 */}
+              {(() => {
+                const nightShift = seatDetails.shifts.find((s) => s.shiftType === "night");
+                const isFloor2 = selectedSeat.seatNumber > 25;
+                const isAdminBlocked = isShiftBlocked(nightShift);
+                const nightProtectedForMe = isShiftProtectedForMe(nightShift);
+                const nightProtectedForOther = isShiftProtectedForOther(nightShift);
+                const nightAvailable = isNightShiftAvailable(seatDetails.shifts, selectedSeat.seatNumber);
+                const isNightSelected = selectedShifts.includes("night");
+
+                return (
+                  <div className={`flex items-center justify-between py-2 ${(isFloor2 || isAdminBlocked || nightProtectedForOther) ? 'opacity-60' : ''}`}>
+                    <p>
+                      <strong>🌙 Night Shift:</strong>
+                      <br />
+                      {isFloor2
+                        ? <span className="text-orange-500">Not available for Floor 2</span>
+                        : isAdminBlocked
+                          ? <span className="text-gray-500 font-semibold">🚫 Blocked by Owner</span>
+                          : nightProtectedForMe
+                            ? <span className="text-purple-600 font-semibold">🛡️ Protected for You!</span>
+                            : nightProtectedForOther
+                              ? <span className="text-yellow-600 font-semibold">⏳ Reserved</span>
+                              : nightShift?.userId
+                                ? `Booked by ${nightShift.userDetails?.fullname || "Someone"}`
+                                : <span className="text-green-600">Available</span>}
+                    </p>
+                    <input
+                      type="checkbox"
+                      disabled={!nightAvailable || isBooking || isFloor2 || isAdminBlocked || nightProtectedForOther}
+                      checked={isNightSelected}
+                      onChange={() => toggleShiftSelection("night", nightAvailable)}
+                      className="w-5 h-5 cursor-pointer accent-green-800 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                );
+              })()}
+
+              {selectedShifts.length > 0 && (
+                <div className="mt-4 font-semibold bg-teal-100 dark:bg-teal-900 p-3 rounded">
+                  {loadingPrice ? (
+                    <p>Calculating price...</p>
+                  ) : (
+                    <>
+                      <p className="text-lg">
+                        Total: ₹{totalPrice}
+                        {priceInfo?.isProRated && fullPrice > totalPrice && (
+                          <span className="line-through text-gray-500 text-sm ml-2">₹{fullPrice}</span>
+                        )}
+                      </p>
+                      {priceInfo?.isProRated && (
+                        <p className="text-xs text-teal-700 dark:text-teal-300 mt-1">
+                          📅 Pro-rated for {priceInfo.remainingDays} remaining days this month
+                          {priceInfo.savings > 0 && <span className="ml-1 text-green-600">(Save ₹{priceInfo.savings})</span>}
+                        </p>
+                      )}
+                      <span className="block text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        for {monthLabel}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+              {error && (
+                <p className="mt-2 text-sm text-red-600 font-semibold">
+                  {error}
                 </p>
-              ))}
+              )}
+              {successMessage && (
+                <p className="mt-2 text-sm text-green-600 font-semibold">
+                  {successMessage}
+                </p>
+              )}
+              <button
+                onClick={handleBookNow}
+                disabled={
+                  isBooking || selectedShifts.length === 0 || !selectedSeat
+                }
+                className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isBooking ? "Processing..." : `Book Now - ₹${totalPrice}`}
+              </button>
+
+              {/* Admin Block/Unblock Controls */}
+              {loggedInUser?.isAdmin && seatDetails && (
+                <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    🔒 Admin Controls
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          setError("");
+                          await axios.post(
+                            `${api}/admin/block-seat`,
+                            {
+                              seatNumber: selectedSeat.seatNumber,
+                              shiftTypes: ["morning", "afternoon", "night"],
+                              month: selectedMonth,
+                              year: selectedYear,
+                            },
+                            { withCredentials: true }
+                          );
+                          setSuccessMessage("Seat blocked successfully!");
+                          fetchSeatDetails(selectedSeat.seatNumber);
+                          // Refresh seats
+                          const seatsRes = await axios.get(
+                            `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
+                            { withCredentials: true }
+                          );
+                          setSeats(seatsRes.data.seats);
+                        } catch (err) {
+                          setError(err?.response?.data?.message || "Failed to block seat");
+                        }
+                      }}
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-lg text-sm"
+                    >
+                      🚫 Block Seat
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          setError("");
+                          await axios.post(
+                            `${api}/admin/unblock-seat`,
+                            {
+                              seatNumber: selectedSeat.seatNumber,
+                              shiftTypes: ["morning", "afternoon", "night"],
+                              month: selectedMonth,
+                              year: selectedYear,
+                            },
+                            { withCredentials: true }
+                          );
+                          setSuccessMessage("Seat unblocked successfully!");
+                          fetchSeatDetails(selectedSeat.seatNumber);
+                          // Refresh seats
+                          const seatsRes = await axios.get(
+                            `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
+                            { withCredentials: true }
+                          );
+                          setSeats(seatsRes.data.seats);
+                        } catch (err) {
+                          setError(err?.response?.data?.message || "Failed to unblock seat");
+                        }
+                      }}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm"
+                    >
+                      ✅ Unblock Seat
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Filters and Seat Grid Together */}
         <div className="flex-1 flex flex-col md:flex-row gap-4">
-          {/* Filters */}
+          {/* Filters - Day and Night only */}
           <div className="md:w-1/4 bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Filters Shifts</h3>
-            {["morning", "afternoon", "night"].map((shift) => {
-              // Define dynamic colors for each shift
-              const shiftColors = {
-                morning: "checked:bg-yellow-400 checked:border-yellow-500",
-                afternoon: "checked:bg-blue-400 checked:border-blue-500",
-                night: "checked:bg-black checked:border-gray-700",
-              };
+            <h3 className="text-lg font-semibold mb-2">Filter by Shift</h3>
+            {/* Day Shift Filter */}
+            <label className="block text-sm font-medium mt-1 p-2 rounded-lg cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.day}
+                  onChange={() => handleFilterChange("day")}
+                  className="appearance-none w-6 h-6 border-2 border-gray-500 rounded-md transition-all duration-200 focus:ring-2 focus:ring-opacity-50 focus:outline-none mr-2 checked:bg-green-500 checked:border-green-600"
+                />
+                <span>☀️ Day Shift</span>
+                <span className="ml-1 text-xs text-gray-500">(₹600)</span>
+              </div>
+            </label>
+            {/* Night Shift Filter */}
+            <label className="block text-sm font-medium mt-1 p-2 rounded-lg cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/40">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.night}
+                  onChange={() => handleFilterChange("night")}
+                  className="appearance-none w-6 h-6 border-2 border-gray-500 rounded-md transition-all duration-200 focus:ring-2 focus:ring-opacity-50 focus:outline-none mr-2 checked:bg-green-800 checked:border-green-900"
+                />
+                <span>🌙 Night Shift</span>
+                <span className="ml-1 text-xs text-gray-500">(₹300)</span>
+              </div>
+            </label>
 
-              return (
-                <label
-                  key={shift}
-                  className="block text-sm font-medium mt-1 p-2 rounded-lg cursor-pointer"
-                >
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters[shift]}
-                      onChange={() => handleFilterChange(shift)}
-                      className={`appearance-none w-6 h-6 border-2 border-gray-500 rounded-md transition-all duration-200 focus:ring-2 focus:ring-opacity-50 focus:outline-none mr-2 ${shiftColors[shift]}`}
-                    />
-                    {shift.charAt(0).toUpperCase() + shift.slice(1)}
-                  </div>
-                </label>
-              );
-            })}
+            {/* Legend */}
+            <div className="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
+              <p className="text-xs text-gray-500 mb-2">Seat Colors:</p>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-green-500 rounded"></div>
+                <span>Day Available</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-green-800 rounded"></div>
+                <span>Night Available</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-green-800 rounded"></div>
+                <span>Both Available</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                <span>🛡️ My Protected</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                <span>⏳ Reserved</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-4 h-4 bg-red-600 rounded"></div>
+                <span>Fully Booked</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="w-4 h-4 bg-gray-500 rounded"></div>
+                <span>🚫 Blocked by Owner</span>
+              </div>
+            </div>
+
+            {/* Floor Info */}
+            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+              <p className="text-xs text-gray-500 mb-1 font-semibold">🏢 Floor Info:</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Floor 1: Seats 1-25 (Day + Night)</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Floor 2: Seats 1-34 (Day only)</p>
+            </div>
+
+            {/* Night Shift Note */}
+            <p className="text-xs text-orange-500 mt-2">
+              ⚠️ Night shift only for Floor 1 (Seats 1-25)
+            </p>
           </div>
 
-          {/* Seat Grid */}
-          <div className="flex-1  bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-4 rounded-lg">
+          {/* Seat Grid - Two Floors */}
+          <div className="flex-1 bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-4 rounded-lg">
             <h2 className="text-lg font-bold mb-4 text-center">
               Available Seats
             </h2>
-            <div className="flex justify-start  flex-wrap gap-2">
-              {(filteredSeats.length ? filteredSeats : seats).map((seat) => (
-                <div
-                  key={seat.seatNumber}
-                  className={`w-12 h-12 flex items-center justify-center rounded-lg cursor-pointer ${getSeatColor(
-                    seat.shifts
-                  )}`}
-                  onClick={() => handleSeatClick(seat)}
-                >
-                  {seat.seatNumber}
-                </div>
-              ))}
+
+            {/* Floor 1: Seats 1-25 (Day + Night) */}
+            <div className="mb-6">
+              <h3 className="text-md font-semibold mb-2 flex items-center gap-2">
+                <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-sm">🏢 Floor 1</span>
+                <span className="text-xs text-gray-500">(Seats 1-25 • Day + Night)</span>
+              </h3>
+              <div className="flex justify-start flex-wrap gap-2">
+                {(filteredSeats.length ? filteredSeats : seats)
+                  .filter((seat) => seat.seatNumber <= 25)
+                  .map((seat) => (
+                    <div
+                      key={seat.seatNumber}
+                      className={`w-12 h-12 flex items-center justify-center rounded-lg cursor-pointer transition-transform hover:scale-110 ${getSeatColor(
+                        seat.shifts,
+                        seat.seatNumber
+                      )}`}
+                      onClick={() => handleSeatClick(seat)}
+                    >
+                      {seat.seatNumber}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Floor 2: Seats 1-34 (internally 26-59, Day only) */}
+            <div>
+              <h3 className="text-md font-semibold mb-2 flex items-center gap-2">
+                <span className="bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded text-sm">🏢 Floor 2</span>
+                <span className="text-xs text-gray-500">(Seats 1-34 • Day only)</span>
+              </h3>
+              <div className="flex justify-start flex-wrap gap-2">
+                {(filteredSeats.length ? filteredSeats : seats)
+                  .filter((seat) => seat.seatNumber > 25)
+                  .map((seat) => (
+                    <div
+                      key={seat.seatNumber}
+                      className={`w-12 h-12 flex items-center justify-center rounded-lg cursor-pointer transition-transform hover:scale-110 ${getSeatColor(
+                        seat.shifts,
+                        seat.seatNumber
+                      )}`}
+                      onClick={() => handleSeatClick(seat)}
+                    >
+                      {seat.seatNumber - 25}
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

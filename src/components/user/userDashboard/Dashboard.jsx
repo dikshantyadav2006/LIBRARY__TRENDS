@@ -99,6 +99,16 @@ const Dashboard = ({ loggedInUser, handleLogout, loading }) => {
               <p>Mobile : {loggedInUser?.mobile}</p>
               <p>Address : {loggedInUser?.address}</p>
             </div>
+            {/* My Bookings Button */}
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 p-4 mt-5 rounded-lg relative">
+              <button
+                onClick={() => navigate("/my-bookings")}
+                className="w-full text-white font-semibold py-2 rounded-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+              >
+                📚 View My Bookings
+              </button>
+            </div>
+
             <div className="bg-[--secondary-light-color] md:hidden dark:bg-[--secondary-dark-color] p-4 pt-6 mt-5 rounded-lg relative flex justify-center items-center gap-4">
               <button
                 onClick={handleLogout}

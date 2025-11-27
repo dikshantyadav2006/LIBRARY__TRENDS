@@ -56,7 +56,7 @@ const VelocitySection = ({ scrollContainerRef }) => {
   );
 
   return (
-    <div ref={scrollContainerRef} className="relative my-[20vh]">
+    <div className="relative my-[20vh]">
       <ScrollVelocity
         texts={[<ScrollingContent key="1" />, <ScrollingContent key="2" />]}
         scrollContainerRef={scrollContainerRef}

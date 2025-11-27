@@ -1,9 +1,9 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import FocusSection from "./sections/FocusSection.jsx";
 import VelocitySection from "./sections/VelocitySection.jsx";
 import SeatDetails from "../seatDetails/SeatDetails.jsx";
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 const Home = ({isDarkMode,loggedInUser}) => {
   const containerRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -58,7 +58,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
 	      {/* Seat grid below intro */}
 	      <section className="relative z-10 flex justify-center items-center min-h-[60vh] my-10">
 	        <div className="w-full max-w-6xl">
-	          <SeatDetails />
+	          <SeatDetails loggedInUser={loggedInUser} />
 	        </div>
 	      </section>
 
@@ -68,7 +68,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
       </section>
 
       {/* Scroll Velocity Rotating Text Section */}
-      <section className="relative z-10">
+      <section ref={scrollContainerRef} className="relative z-10" style={{ position: "relative" }}>
         <VelocitySection scrollContainerRef={scrollContainerRef} />
       </section>
 

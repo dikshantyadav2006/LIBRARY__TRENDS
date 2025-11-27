@@ -8,7 +8,6 @@ const UserDetail = () => {
 
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profilePicture, setprofilePicture] = useState(null);
   const api = import.meta.env.VITE_API_BASE_URL;
@@ -21,17 +20,6 @@ const UserDetail = () => {
           { withCredentials: true }
         );
         setUser(res.data.user);
-        // console.log(res.data);
-        if (res.data.student) {
-          const addedBy = await axios.get(
-            `${api}/admin/user/${res.data.student.addedBy}`,
-            { withCredentials: true }
-          );
-          setStudent({
-            ...res.data.student,
-            addedBy: addedBy.data.user.fullname,
-          });
-        }
         if (res.data.user) {
           const profilePic = await FetchProfilePicture(res.data.user._id);
           if (profilePic) {
@@ -73,94 +61,35 @@ const UserDetail = () => {
       </div>
       <div className="div flex md:flex-row flex-col gap-4">
         {user ? (
-          <>
-            <div className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-7 rounded-lg mt-2 relative flex flex-col items-start justify-center gap-2  ">
-              <h4 className="text-xl text-nowrap font-bold absolute transform -translate-y-[50%] -translate-x-[50%] bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-4  py-1  rounded-full top-0 left-1/2 ">
-                User Details
-              </h4>
-              <h2 className="text-xl font-normal">
-            {" "}
-            <span className="font-normal text-xl">Username:</span> {user.username}
-          </h2>
-              <p>Mobile: {user.mobile}</p>
-              <p>Email: {user.gmail}</p>
-             
-                <address>Address: {user.address}</address>
-              
-              <p>gender: {user.gender}</p>
-              <p>
-               Signup Date:{" "}
-                {
-                  new Date(user.createdAt).toLocaleDateString()}
-              </p>
-              <p>
-                Last Updated:{" "}
-                {isNaN(new Date(user.createdAt).getTime())
-                  ? new Date(user.updatedAt).toLocaleDateString()
-                  : new Date(user.createdAt).toLocaleDateString()}
-              </p>
-              <button
-                onClick={() => navigate(`/dashboard/edit-user/${user._id}`)}
-                className="bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-2 py-1  rounded-lg hover:scale-95 font-thin text-[--dark-color] dark:text-[--light-color] golos-text-400 md:block hidden  "
-              >
-                Edit Profile
-              </button>
-
-              <button
-                  className="mt-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/add-student/${user._id}`)
-                  }
-                >
-                 block user
-                </button>
-            </div>
-
-            {student ? (
-              <div className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-7 rounded-lg mt-2 relative  ">
-                <h3 className="text-xl font-bold absolute transform -translate-y-[50%] -translate-x-[50%] bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-4  py-1  rounded-full top-0 left-1/2 text-nowrap">
-                  Student Details
-                </h3>
-                <p>
-                  Joining Date:{" "}
-                  {new Date(student.joiningDate).toLocaleDateString()}
-                </p>
-                <p>
-                Last Updated:{" "}
-                {isNaN(new Date(student.createdAt).getTime())
-                  ? new Date(student.updatedAt).toLocaleDateString()
-                  : new Date(student.createdAt).toLocaleDateString()}
-              </p>
-                <p>
-                  Duration Until:{" "}
-                  {new Date(student.duration).toLocaleDateString()}
-                </p>
-                <p>Added By: {student.addedBy}</p>
-                <p>Timing: {student.timing}</p>
-
-                <button
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/edit-student/${student._id}`)
-                  }
-                >
-                  Edit Student
-                </button>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <p className="text-red-500">Not added as a student yet...</p>
-                <button
-                  className="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-                  onClick={() =>
-                    navigate(`/admin/dashboard/add-student/${user._id}`)
-                  }
-                >
-                  Add as Student
-                </button>
-              </div>
-            )}
-          </>
+          <div className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] p-7 rounded-lg mt-2 relative flex flex-col items-start justify-center gap-2">
+            <h4 className="text-xl text-nowrap font-bold absolute transform -translate-y-[50%] -translate-x-[50%] bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-4 py-1 rounded-full top-0 left-1/2">
+              User Details
+            </h4>
+            <h2 className="text-xl font-normal">
+              <span className="font-normal text-xl">Username:</span> {user.username}
+            </h2>
+            <p>User ID: {user._id}</p>
+            <p>Mobile: {user.mobile}</p>
+            <p>Email: {user.gmail}</p>
+            <address>Address: {user.address}</address>
+            <p>Gender: {user.gender}</p>
+            <p>
+              Signup Date:{" "}
+              {new Date(user.createdAt).toLocaleDateString()}
+            </p>
+            <p>
+              Last Updated:{" "}
+              {isNaN(new Date(user.createdAt).getTime())
+                ? new Date(user.updatedAt).toLocaleDateString()
+                : new Date(user.createdAt).toLocaleDateString()}
+            </p>
+            <button
+              onClick={() => navigate(`/dashboard/edit-user/${user._id}`)}
+              className="bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-4 py-2 rounded-lg hover:scale-95 font-thin text-[--dark-color] dark:text-[--light-color] golos-text-400"
+            >
+              Edit Profile
+            </button>
+          </div>
         ) : (
           <p>User not found.</p>
         )}

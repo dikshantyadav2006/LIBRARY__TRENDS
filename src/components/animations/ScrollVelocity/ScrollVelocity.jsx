@@ -56,8 +56,8 @@ export const ScrollVelocity = ({
   }) {
     const baseX = useMotionValue(0);
     const scrollOptions = scrollContainerRef
-      ? { container: scrollContainerRef }
-      : {};
+      ? { container: scrollContainerRef, layoutEffect: false }
+      : { layoutEffect: false };
     const { scrollY } = useScroll(scrollOptions);
     const scrollVelocity = useVelocity(scrollY);
     const smoothVelocity = useSpring(scrollVelocity, {
