@@ -9,6 +9,7 @@ import Dashboard from "../components/user/userDashboard/Dashboard";
 import AdminDashboard from "../components/admin/adminDashboard/AdminDashboard";
 import UserDetail from "../components/admin/adminDashboard/UserDetail";
 import EditUserProfile from "../components/user/EditUserProfile/EditUserProfile";
+import CompleteProfile from "../components/user/CompleteProfile/CompleteProfile";
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
@@ -25,8 +26,28 @@ const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDark
       element={user ? <Navigate to="/dashboard" /> : <Signup />}
     />
     <Route
+      path="/complete-profile"
+      element={
+        user ? (
+          user.profileCompleted ? (
+            <Navigate to="/dashboard" />
+          ) : (
+            <CompleteProfile loggedInUser={user} setLoggedInUser={setLoggedInUser} />
+          )
+        ) : (
+          <Navigate to="/login" />
+        )
+      }
+    />
+    <Route
       path="/dashboard"
-      element={<Dashboard loading={loading} loggedInUser={user} setUser={setUser} handleLogout={handleLogout} />}
+      element={
+        user && !user.profileCompleted ? (
+          <Navigate to="/complete-profile" />
+        ) : (
+          <Dashboard loading={loading} loggedInUser={user} setUser={setUser} handleLogout={handleLogout} />
+        )
+      }
     />
     <Route
       path="/admin"

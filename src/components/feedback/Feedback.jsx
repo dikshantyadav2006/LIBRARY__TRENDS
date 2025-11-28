@@ -5,8 +5,8 @@ import AllFeedbacks from './AllFeedbacks'
 const Feedback = ({ loggedInUser }) => {
   return (
     <div>
-      <AllFeedbacks loggedInUser={loggedInUser} />
       <SubmitFeedbackCard loggedInUser={loggedInUser} />
+      <AllFeedbacks loggedInUser={loggedInUser} />
     </div>
   )
 }

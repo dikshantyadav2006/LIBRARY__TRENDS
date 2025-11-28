@@ -639,75 +639,20 @@ const SeatDetails = ({ loggedInUser }) => {
               </button>
 
               {/* Admin Block/Unblock Controls */}
-              {loggedInUser?.isAdmin && seatDetails && (
-                <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    🔒 Admin Controls
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => {
-                        try {
-                          setError("");
-                          await axios.post(
-                            `${api}/admin/block-seat`,
-                            {
-                              seatNumber: selectedSeat.seatNumber,
-                              shiftTypes: ["morning", "afternoon", "night"],
-                              month: selectedMonth,
-                              year: selectedYear,
-                            },
-                            { withCredentials: true }
-                          );
-                          setSuccessMessage("Seat blocked successfully!");
-                          fetchSeatDetails(selectedSeat.seatNumber);
-                          // Refresh seats
-                          const seatsRes = await axios.get(
-                            `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
-                            { withCredentials: true }
-                          );
-                          setSeats(seatsRes.data.seats);
-                        } catch (err) {
-                          setError(err?.response?.data?.message || "Failed to block seat");
-                        }
-                      }}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-lg text-sm"
-                    >
-                      🚫 Block Seat
-                    </button>
-                    <button
-                      onClick={async () => {
-                        try {
-                          setError("");
-                          await axios.post(
-                            `${api}/admin/unblock-seat`,
-                            {
-                              seatNumber: selectedSeat.seatNumber,
-                              shiftTypes: ["morning", "afternoon", "night"],
-                              month: selectedMonth,
-                              year: selectedYear,
-                            },
-                            { withCredentials: true }
-                          );
-                          setSuccessMessage("Seat unblocked successfully!");
-                          fetchSeatDetails(selectedSeat.seatNumber);
-                          // Refresh seats
-                          const seatsRes = await axios.get(
-                            `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
-                            { withCredentials: true }
-                          );
-                          setSeats(seatsRes.data.seats);
-                        } catch (err) {
-                          setError(err?.response?.data?.message || "Failed to unblock seat");
-                        }
-                      }}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm"
-                    >
-                      ✅ Unblock Seat
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AdminBlockControls
+                loggedInUser={loggedInUser}
+                seatDetails={seatDetails}
+                selectedSeat={selectedSeat}
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                availableMonths={availableMonths}
+                isSeatFullyBlocked={isSeatFullyBlocked}
+                fetchSeatDetails={fetchSeatDetails}
+                setSeats={setSeats}
+                setError={setError}
+                setSuccessMessage={setSuccessMessage}
+                api={api}
+              />
             </div>
           </div>
         )}
@@ -744,50 +689,8 @@ const SeatDetails = ({ loggedInUser }) => {
               </div>
             </label>
 
-            {/* Legend */}
-            <div className="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
-              <p className="text-xs text-gray-500 mb-2">Seat Colors:</p>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-green-500 rounded"></div>
-                <span>Day Available</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-green-800 rounded"></div>
-                <span>Night Available</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-green-800 rounded"></div>
-                <span>Both Available</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                <span>🛡️ My Protected</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                <span>⏳ Reserved</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs mb-1">
-                <div className="w-4 h-4 bg-red-600 rounded"></div>
-                <span>Fully Booked</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-4 h-4 bg-gray-500 rounded"></div>
-                <span>🚫 Blocked by Owner</span>
-              </div>
-            </div>
-
-            {/* Floor Info */}
-            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
-              <p className="text-xs text-gray-500 mb-1 font-semibold">🏢 Floor Info:</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Floor 1: Seats 1-25 (Day + Night)</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Floor 2: Seats 1-34 (Day only)</p>
-            </div>
-
-            {/* Night Shift Note */}
-            <p className="text-xs text-orange-500 mt-2">
-              ⚠️ Night shift only for Floor 1 (Seats 1-25)
-            </p>
+            {/* Legend - Dropdown on Mobile, Expanded on Desktop */}
+            <SeatLegend />
           </div>
 
           {/* Seat Grid - Two Floors */}
@@ -899,5 +802,252 @@ const SeatSkeleton = () => {
   );
 };
 
+// Seat Legend Component - Dropdown on Mobile, Expanded on Desktop
+const SeatLegend = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const legendItems = [
+    { color: "bg-green-500", label: "Day Available" },
+    { color: "bg-green-800", label: "Night Available" },
+    { color: "bg-gradient-to-r from-green-500 to-green-800", label: "Both Available" },
+    { color: "bg-purple-500", label: "🛡️ My Protected" },
+    { color: "bg-yellow-500", label: "⏳ Reserved" },
+    { color: "bg-red-600", label: "Fully Booked" },
+    { color: "bg-gray-500", label: "🚫 Blocked" },
+  ];
+
+  return (
+    <div className="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
+      {/* Mobile: Dropdown Toggle */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden w-full flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg"
+      >
+        <span className="flex items-center gap-2">
+          <span className="flex gap-0.5">
+            {legendItems.slice(0, 4).map((item, i) => (
+              <div key={i} className={`w-3 h-3 ${item.color} rounded-sm`}></div>
+            ))}
+          </span>
+          <span>Seat Colors</span>
+        </span>
+        <span className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+          ▼
+        </span>
+      </button>
+
+      {/* Mobile: Dropdown Content */}
+      <div className={`md:hidden overflow-hidden transition-all duration-300 ${isOpen ? "max-h-96 mt-2" : "max-h-0"}`}>
+        <div className="grid grid-cols-2 gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          {legendItems.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 text-xs">
+              <div className={`w-4 h-4 ${item.color} rounded`}></div>
+              <span className="truncate">{item.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Floor Info - Mobile */}
+        <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+          <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">🏢 Floors</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">F1: 1-25 (Day+Night) | F2: 1-34 (Day)</p>
+        </div>
+      </div>
+
+      {/* Desktop: Always Visible */}
+      <div className="hidden md:block">
+        <p className="text-xs text-gray-500 mb-2">Seat Colors:</p>
+        {legendItems.map((item, index) => (
+          <div key={index} className="flex items-center gap-2 text-xs mb-1">
+            <div className={`w-4 h-4 ${item.color} rounded`}></div>
+            <span>{item.label}</span>
+          </div>
+        ))}
+
+        {/* Floor Info - Desktop */}
+        <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+          <p className="text-xs text-gray-500 mb-1 font-semibold">🏢 Floor Info:</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Floor 1: Seats 1-25 (Day + Night)</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Floor 2: Seats 1-34 (Day only)</p>
+        </div>
+
+        {/* Night Shift Note */}
+        <p className="text-xs text-orange-500 mt-2">
+          ⚠️ Night shift only for Floor 1
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Admin Block Controls Component with multi-month selection
+const AdminBlockControls = ({
+  loggedInUser,
+  seatDetails,
+  selectedSeat,
+  selectedMonth,
+  selectedYear,
+  availableMonths,
+  isSeatFullyBlocked,
+  fetchSeatDetails,
+  setSeats,
+  setError,
+  setSuccessMessage,
+  api,
+}) => {
+  const [selectedBlockMonths, setSelectedBlockMonths] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Initialize with current month selected
+  useEffect(() => {
+    if (selectedMonth && selectedYear) {
+      setSelectedBlockMonths([{ month: selectedMonth, year: selectedYear }]);
+    }
+  }, [selectedMonth, selectedYear]);
+
+  if (!loggedInUser?.isAdmin ||!seatDetails) return null;
+
+  const isBlocked = isSeatFullyBlocked(seatDetails.shifts);
+
+  const toggleMonthSelection = (monthData) => {
+    const key = `${monthData.month}-${monthData.year}`;
+    const exists = selectedBlockMonths.some(
+      (m) => `${m.month}-${m.year}` === key
+    );
+
+    if (exists) {
+      setSelectedBlockMonths(
+        selectedBlockMonths.filter((m) => `${m.month}-${m.year}` !== key)
+      );
+    } else {
+      setSelectedBlockMonths([...selectedBlockMonths, { month: monthData.month, year: monthData.year }]);
+    }
+  };
+
+  const isMonthSelected = (monthData) => {
+    return selectedBlockMonths.some(
+      (m) => m.month === monthData.month && m.year === monthData.year
+    );
+  };
+
+  const handleBlockUnblock = async (action) => {
+    if (selectedBlockMonths.length === 0) {
+      setError("Please select at least one month");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError("");
+
+    try {
+      const endpoint = action === "block" ? "/admin/block-seat" : "/admin/unblock-seat";
+
+      // Process each selected month
+      for (const monthData of selectedBlockMonths) {
+        await axios.post(
+          `${api}${endpoint}`,
+          {
+            seatNumber: selectedSeat.seatNumber,
+            shiftTypes: ["morning", "afternoon", "night"],
+            month: monthData.month,
+            year: monthData.year,
+          },
+          { withCredentials: true }
+        );
+      }
+
+      const monthLabels = selectedBlockMonths.map((m) => {
+        const found = availableMonths.find((am) => am.month === m.month && am.year === m.year);
+        return found?.label || `${m.month}/${m.year}`;
+      }).join(", ");
+
+      setSuccessMessage(
+        `Seat ${action === "block" ? "blocked" : "unblocked"} for: ${monthLabels}`
+      );
+
+      // Refresh current month view
+      fetchSeatDetails(selectedSeat.seatNumber);
+      const seatsRes = await axios.get(
+        `${api}/monthly-booking/seats?month=${selectedMonth}&year=${selectedYear}`,
+        { withCredentials: true }
+      );
+      setSeats(seatsRes.data.seats);
+    } catch (err) {
+      setError(err?.response?.data?.message || `Failed to ${action} seat`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        🔒 Admin Controls
+      </p>
+
+      {/* Month Selection for Blocking */}
+      <div className="mb-3">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          Select months to {isBlocked ? "unblock" : "block"}:
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {availableMonths.map((m) => (
+            <button
+              key={`${m.month}-${m.year}`}
+              onClick={() => toggleMonthSelection(m)}
+              className={`px-2 py-1 text-xs rounded transition-all ${
+                isMonthSelected(m)
+                  ? "bg-teal-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+              }`}
+            >
+              {m.label.split(" ")[0]}
+              {m.isCurrent && " •"}
+            </button>
+          ))}
+        </div>
+        {selectedBlockMonths.length > 0 && (
+          <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">
+            {selectedBlockMonths.length} month(s) selected
+          </p>
+        )}
+      </div>
+
+      {/* Block/Unblock Button */}
+      {isBlocked ? (
+        <button
+          onClick={() => handleBlockUnblock("unblock")}
+          disabled={isProcessing || selectedBlockMonths.length === 0}
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isProcessing ? "Processing..." : `✅ Unblock for ${selectedBlockMonths.length} month(s)`}
+        </button>
+      ) : (
+        <button
+          onClick={() => handleBlockUnblock("block")}
+          disabled={isProcessing || selectedBlockMonths.length === 0}
+          className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isProcessing ? "Processing..." : `🚫 Block for ${selectedBlockMonths.length} month(s)`}
+        </button>
+      )}
+
+      {/* Quick Actions */}
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={() => setSelectedBlockMonths(availableMonths.map((m) => ({ month: m.month, year: m.year })))}
+          className="flex-1 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-1 px-2 rounded"
+        >
+          Select All
+        </button>
+        <button
+          onClick={() => setSelectedBlockMonths([{ month: selectedMonth, year: selectedYear }])}
+          className="flex-1 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-1 px-2 rounded"
+        >
+          Current Only
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default SeatDetails;

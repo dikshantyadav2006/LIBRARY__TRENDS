@@ -1,41 +1,122 @@
 const Footer = () => {
+  // Contact persons data
+  const contacts = [
+    {
+      name: "Rohit Patel",
+      role: "Owner",
+      mobile: "+91 7651958626",
+      avatar: "👨‍💼",
+      gradient: "from-teal-500 to-cyan-500",
+    },
+   
+    {
+      name: "Divakar Yadav",
+      role: "",
+      mobile: "+91 9458708008",
+      avatar: "🎧",
+      gradient: "from-orange-500 to-red-500",
+    }, {
+      name: "Dikshant Yadav",
+      role: "",
+      mobile: "+91 7081884742",
+      avatar: "👨‍💻",
+      gradient: "from-purple-500 to-pink-500",
+    },
+  ];
+
   return (
     <footer className="w-full md:p-5 mt-[10vh] p-1">
       {/* Contact & Location Section */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Contact Info */}
-        <div className="p-6 rounded-lg shadow-md bg-[--primary-light-color] dark:bg-[--primary-dark-color] flex flex-col items-start justify-center relative">
-          <h3 className="text-md font-medium mb-1 capitalize text-gray-600 absolute top-[-20px] left-1/2 md:left-[10%] transform -translate-x-[50%] bg-[--secondary-light-color] dark:bg-[--secondary-dark-color] px-4 py-1 rounded-full">
-            Contact Library
+        {/* Contact Info - Redesigned */}
+        <div className="p-6 rounded-2xl shadow-lg bg-[--primary-light-color] dark:bg-[--primary-dark-color] relative">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-500/10 to-purple-500/10 rounded-full blur-2xl"></div>
+
+          <h3 className="text-sm font-semibold capitalize absolute top-[-12px] left-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-4 py-1 rounded-full shadow-md ">
+            📞 Contact Us
           </h3>
-          <p>
-            Email:{" "}
-            <a href="mailto:dikshantyadav2024@gmail.com" className="text-blue-600 hover:underline">
-              dikshantyadav2024@gmail.com
-            </a>
-          </p>
-          <p>
-            Phone:{" "}
-            <a href="tel:+917081884742" className="text-blue-500 hover:underline">
-              +91 7081884742
-            </a>
-          </p>
-          <div className="mt-2 flex justify-center gap-4">
+
+          {/* Contact Cards */}
+          <div className="mt-4 space-y-3">
+            {contacts.map((contact, index) => (
+              <a
+                key={index}
+                href={`tel:${contact.mobile.replace(/\s/g, "")}`}
+                className="group flex items-center gap-4 p-3 rounded-xl bg-[--light-color] dark:bg-[--dark-color] hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+              >
+                {/* Avatar */}
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${contact.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform`}>
+                  {contact.avatar}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">{contact.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{contact.role}</p>
+                </div>
+
+                {/* Phone */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                    {contact.mobile}
+                  </span>
+                  <span className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white group-hover:bg-green-600 transition-colors shadow-md">
+                    📱
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {/* Email Section */}
+          <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-xl shadow-md">
+                ✉️
+              </span>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400">Email us at</p>
+                <a
+                  href="mailto:dikshantyadav2024@gmail.com"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  dikshantyadav2024@gmail.com
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Links */}
+          <div className="mt-4 flex gap-3">
             <a
               href="https://www.instagram.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-pink-500 transition pointer-events-none"
+              className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"
             >
-              Instagram
+              <span>📸</span> Instagram
+            </a>
+            <a
+              href="https://wa.me/917081884742"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"
+            >
+              <span>💬</span> WhatsApp
             </a>
           </div>
+
           {/* Address */}
-          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-            <p className="font-semibold">📍 Address:</p>
-            <p>Ataria Sitapur, Sitapur Road</p>
-            <p>Near Sai Hardware & Mishra Brother Store</p>
-            <p>Sidhauli, Sitapur, UP - 261303</p>
+          <div className="mt-4 p-3 rounded-xl bg-[--light-color] dark:bg-[--dark-color] border-l-4 border-teal-500">
+            <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <span>📍</span> Address
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Ataria Sitapur, Sitapur Road<br />
+              Near Sai Hardware & Mishra Brother Store<br />
+              <span className="font-medium">Sidhauli, Sitapur, UP - 261303</span>
+            </p>
           </div>
         </div>
 
@@ -70,7 +151,7 @@ const Footer = () => {
 
       {/* Copyright */}
       <div className="foot w-full text-center text-sm py-6 mt-10 border-t dark:border-gray-700 border-gray-300 text-gray-500 dark:text-gray-400">
-        <p>© {new Date().getFullYear()} Shai Library. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Sai Library. All rights reserved.</p>
         <p className="mt-1">Made with ❤️ for readers and learners.</p>
       </div>
     </footer>
