@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: "/",  // <-- REQUIRED for Vercel SPA routing
   server: {
-    host: '0.0.0.0', // Allows external access
+    host: '0.0.0.0',
     port: 5173,
     strictPort: true,
   },
-
 })
