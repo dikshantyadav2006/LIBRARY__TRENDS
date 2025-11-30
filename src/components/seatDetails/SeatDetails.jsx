@@ -28,6 +28,11 @@ const SeatDetails = ({ loggedInUser }) => {
   const [priceInfo, setPriceInfo] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
 
+  // Popup state for Day-only confirmation when Night is not available
+  const [showDayOnlyPopup, setShowDayOnlyPopup] = useState(false);
+  const [dayOnlyConfirmed, setDayOnlyConfirmed] = useState(false);
+  const [pendingDaySelection, setPendingDaySelection] = useState(false);
+
   const navigate = useNavigate();
   const api = import.meta.env.VITE_API_BASE_URL;
 
@@ -94,15 +99,16 @@ const SeatDetails = ({ loggedInUser }) => {
   // Fetch price when shifts are selected
   useEffect(() => {
     const fetchPrice = async () => {
-      if (selectedShifts.length === 0 || !selectedMonth || !selectedYear) {
+      if (selectedShifts.length === 0 || !selectedMonth || !selectedYear || !selectedSeat) {
         setPriceInfo(null);
         return;
       }
 
       setLoadingPrice(true);
       try {
+        // Pass shiftTypes and seatNumber for Day+Night combo pricing
         const res = await axios.get(
-          `${api}/payment/price?shiftCount=${selectedShifts.length}&month=${selectedMonth}&year=${selectedYear}`
+          `${api}/payment/price?shiftCount=${selectedShifts.length}&month=${selectedMonth}&year=${selectedYear}&shiftTypes=${encodeURIComponent(JSON.stringify(selectedShifts))}&seatNumber=${selectedSeat.seatNumber}`
         );
         setPriceInfo(res.data);
       } catch (error) {
@@ -112,7 +118,7 @@ const SeatDetails = ({ loggedInUser }) => {
       }
     };
     fetchPrice();
-  }, [selectedShifts, selectedMonth, selectedYear, api]);
+  }, [selectedShifts, selectedMonth, selectedYear, selectedSeat, api]);
 
   const handleSeatClick = (seat) => {
     setSelectedSeat(seat);
@@ -135,25 +141,62 @@ const SeatDetails = ({ loggedInUser }) => {
 
     if (displayShift === "day") {
       // Day shift = morning + afternoon combined
-      setSelectedShifts((prev) => {
-        const hasMorning = prev.includes("morning");
-        const hasAfternoon = prev.includes("afternoon");
-        if (hasMorning && hasAfternoon) {
-          // Remove both
-          return prev.filter((s) => s !== "morning" && s !== "afternoon");
+      const hasMorning = selectedShifts.includes("morning");
+      const hasAfternoon = selectedShifts.includes("afternoon");
+      
+      if (hasMorning && hasAfternoon) {
+        // Remove both Day shifts
+        setSelectedShifts((prev) => prev.filter((s) => s !== "morning" && s !== "afternoon" && s !== "night"));
+        setDayOnlyConfirmed(false);
+      } else {
+        // Check if this is Floor 1 (seats 1-25)
+        const isFloor1 = selectedSeat && selectedSeat.seatNumber <= 25;
+        
+        if (isFloor1 && seatDetails) {
+          // Check if Night shift is available
+          const nightAvailable = isNightShiftAvailable(seatDetails.shifts, selectedSeat.seatNumber);
+          
+          if (nightAvailable) {
+            // Auto-add Night shift for free (Day + Night = ₹600)
+            setSelectedShifts((prev) => {
+              const newShifts = prev.filter((s) => s !== "morning" && s !== "afternoon" && s !== "night");
+              return [...newShifts, "morning", "afternoon", "night"];
+            });
+            setDayOnlyConfirmed(false);
+          } else {
+            // Night shift not available - show popup
+            // Temporarily add Day shifts for popup display, but don't confirm yet
+            setSelectedShifts((prev) => {
+              const newShifts = prev.filter((s) => s !== "morning" && s !== "afternoon" && s !== "night");
+              return [...newShifts, "morning", "afternoon"];
+            });
+            setPendingDaySelection(true);
+            setShowDayOnlyPopup(true);
+            setDayOnlyConfirmed(false);
+          }
         } else {
-          // Add both
-          const newShifts = prev.filter((s) => s !== "morning" && s !== "afternoon");
-          return [...newShifts, "morning", "afternoon"];
+          // Floor 2 or no seat selected - just add Day shifts
+          setSelectedShifts((prev) => {
+            const newShifts = prev.filter((s) => s !== "morning" && s !== "afternoon");
+            return [...newShifts, "morning", "afternoon"];
+          });
+          setDayOnlyConfirmed(false);
+        }
+      }
+    } else {
+      // Night shift - if user manually selects Night only, allow it
+      setSelectedShifts((prev) => {
+        if (prev.includes(displayShift)) {
+          // Remove Night shift
+          return prev.filter((s) => s !== displayShift);
+        } else {
+          // Add Night shift only (₹300)
+          // Remove Day shifts if they exist
+          const withoutDay = prev.filter((s) => s !== "morning" && s !== "afternoon");
+          return [...withoutDay, displayShift];
         }
       });
-    } else {
-      // Night shift
-      setSelectedShifts((prev) =>
-        prev.includes(displayShift)
-          ? prev.filter((s) => s !== displayShift)
-          : [...prev, displayShift]
-      );
+      setDayOnlyConfirmed(false);
     }
   };
 
@@ -342,6 +385,23 @@ const SeatDetails = ({ loggedInUser }) => {
     });
   };
 
+  // Handle Day-only popup confirmation
+  const handleDayOnlyConfirm = () => {
+    if (dayOnlyConfirmed) {
+      // User confirmed - Day shifts are already selected, just close popup
+      setShowDayOnlyPopup(false);
+      setPendingDaySelection(false);
+    }
+  };
+
+  const handleDayOnlyCancel = () => {
+    // Cancel - remove Day selection
+    setSelectedShifts((prev) => prev.filter((s) => s !== "morning" && s !== "afternoon" && s !== "night"));
+    setShowDayOnlyPopup(false);
+    setPendingDaySelection(false);
+    setDayOnlyConfirmed(false);
+  };
+
   const handleBookNow = async () => {
     try {
       setError("");
@@ -359,6 +419,12 @@ const SeatDetails = ({ loggedInUser }) => {
 
       if (!selectedMonth || !selectedYear) {
         setError("Please select a month first.");
+        return;
+      }
+
+      // If popup is showing and not confirmed, don't proceed
+      if (showDayOnlyPopup && !dayOnlyConfirmed) {
+        setError("Please confirm your booking choice in the popup.");
         return;
       }
 
@@ -605,6 +671,22 @@ const SeatDetails = ({ loggedInUser }) => {
                           <span className="line-through text-gray-500 text-sm ml-2">₹{fullPrice}</span>
                         )}
                       </p>
+                      {/* Show special pricing info for Day+Night combo */}
+                      {selectedSeat && selectedSeat.seatNumber <= 25 && 
+                       selectedShifts.includes("morning") && 
+                       selectedShifts.includes("afternoon") && 
+                       selectedShifts.includes("night") && (
+                        <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                          ✨ Day + Night combo: Night shift included FREE!
+                        </p>
+                      )}
+                      {selectedShifts.includes("night") && 
+                       !selectedShifts.includes("morning") && 
+                       !selectedShifts.includes("afternoon") && (
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                          🌙 Night shift only: ₹300
+                        </p>
+                      )}
                       {priceInfo?.isProRated && (
                         <p className="text-xs text-teal-700 dark:text-teal-300 mt-1">
                           📅 Pro-rated for {priceInfo.remainingDays} remaining days this month
@@ -749,6 +831,48 @@ const SeatDetails = ({ loggedInUser }) => {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Day-Only Confirmation Popup */}
+      {showDayOnlyPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">
+              Night Shift Not Available
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              This seat is not available for the Night shift. Do you want to continue booking for the Day shift only?
+            </p>
+            
+            <label className="flex items-center mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dayOnlyConfirmed}
+                onChange={(e) => setDayOnlyConfirmed(e.target.checked)}
+                className="w-5 h-5 mr-3 accent-green-600"
+              />
+              <span className="text-gray-700 dark:text-gray-300 font-medium">
+                I want to book this seat for the Day shift only.
+              </span>
+            </label>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleDayOnlyConfirm}
+                disabled={!dayOnlyConfirmed}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Continue with Day Only
+              </button>
+              <button
+                onClick={handleDayOnlyCancel}
+                className="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
