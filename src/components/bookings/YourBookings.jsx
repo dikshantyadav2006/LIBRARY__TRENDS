@@ -63,15 +63,9 @@ const YourBookings = ({ loggedInUser }) => {
     return bookingDate >= new Date(now.getFullYear(), now.getMonth());
   };
 
-  // Calculate days remaining in current month
-  const getDaysRemaining = () => {
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    return daysInMonth - now.getDate();
-  };
-
+  // Manual protection can be done anytime (automatic protection handles immediate next month)
   const canShowProtection = () => {
-    return getDaysRemaining() <= 3;
+    return true;
   };
 
   // Open protection modal
@@ -213,21 +207,12 @@ const YourBookings = ({ loggedInUser }) => {
               {/* Protection Button - Only for current/future bookings */}
               {isCurrentOrFuture(booking.month, booking.year) && (
                 <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                  {canShowProtection() ? (
-                    <button
-                      onClick={() => handleProtectClick(booking)}
-                      className="w-full bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white py-2 px-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
-                    >
-                      🛡️ Protect My Seat for Next Month
-                    </button>
-                  ) : (
-                    <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
-                      ⏳ Protection available in {getDaysRemaining() - 3} days
-                      <span className="block text-gray-500 mt-1">
-                        (Last 3 days of month only)
-                      </span>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handleProtectClick(booking)}
+                    className="w-full bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white py-2 px-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    🛡️ Protect My Seat for Next Month
+                  </button>
                 </div>
               )}
             </div>

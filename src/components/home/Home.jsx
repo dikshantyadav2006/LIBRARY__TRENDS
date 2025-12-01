@@ -189,7 +189,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
           {/* Feedback Cards Preview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {[
-              { emoji: "📚", text: "Best place to study in Sidhauli!", rating: 5, name: "Rahul S." },
+              { emoji: "📚", text: "Best place to study in ATARIA!", rating: 5, name: "DIKSHANT YADAV" },
               { emoji: "🎯", text: "Peaceful environment, great focus zone.", rating: 5, name: "Priya K." },
               { emoji: "💡", text: "Affordable and well-maintained library.", rating: 4, name: "Amit Y." },
             ].map((review, index) => (

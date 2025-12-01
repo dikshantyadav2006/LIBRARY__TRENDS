@@ -88,9 +88,9 @@ const Footer = () => {
           </div>
 
           {/* Social Links */}
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex gap-3 ">
             <a
-              href="https://www.instagram.com/"
+              href="https://www.instagram.com/dikshantyadav.profile"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"
@@ -98,7 +98,7 @@ const Footer = () => {
               <span>📸</span> Instagram
             </a>
             <a
-              href="https://wa.me/917081884742"
+              href="https://wa.me/+918948000112"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"

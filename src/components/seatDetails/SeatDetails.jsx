@@ -454,7 +454,7 @@ const SeatDetails = ({ loggedInUser }) => {
         order_id: data.orderId,
         handler: async function (response) {
           try {
-            await axios.post(
+            const verifyRes = await axios.post(
               `${api}/payment/verify`,
               {
                 razorpay_order_id: response.razorpay_order_id,
@@ -464,7 +464,11 @@ const SeatDetails = ({ loggedInUser }) => {
               { withCredentials: true }
             );
 
-            setSuccessMessage(`Payment successful! Seat booked for ${monthLabel}`);
+            let successMsg = `Payment successful! Seat booked for ${monthLabel}`;
+            if (verifyRes.data.autoProtected) {
+              successMsg += `\n🛡️ Your seat has been automatically protected for ${verifyRes.data.protectedMonth}. You must complete payment by Day 3, or the protection will expire.`;
+            }
+            setSuccessMessage(successMsg);
             setSelectedShifts([]);
             // Refresh seats for the selected month
             const seatsRes = await axios.get(

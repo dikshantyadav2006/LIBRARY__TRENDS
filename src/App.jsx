@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import NavbarMain from "./components/navbar/NavbarMain";
 import Footer from "./components/footer/Footer";
-import logo from "./assets/images/logo.png";
+import logo from "./assets/images/LOADING_LOGO.png";
 import TextCursor from "./components/animations/TextCursor";
 import ClickSpark from "./components/animations/clickSpark/ClickSpark";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop.jsx";
