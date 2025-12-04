@@ -688,7 +688,7 @@ const SeatDetails = ({ loggedInUser }) => {
                        !selectedShifts.includes("morning") && 
                        !selectedShifts.includes("afternoon") && (
                         <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                          🌙 Night shift only: ₹300
+                          🌙 Night shift only: ₹250
                         </p>
                       )}
                       {priceInfo?.isProRated && (
@@ -758,7 +758,7 @@ const SeatDetails = ({ loggedInUser }) => {
                   className="appearance-none w-6 h-6 border-2 border-gray-500 rounded-md transition-all duration-200 focus:ring-2 focus:ring-opacity-50 focus:outline-none mr-2 checked:bg-green-500 checked:border-green-600"
                 />
                 <span>☀️ Day Shift</span>
-                <span className="ml-1 text-xs text-gray-500">(₹600)</span>
+                <span className="ml-1 text-xs text-gray-500">(₹500)</span>
               </div>
             </label>
             {/* Night Shift Filter */}
@@ -771,7 +771,7 @@ const SeatDetails = ({ loggedInUser }) => {
                   className="appearance-none w-6 h-6 border-2 border-gray-500 rounded-md transition-all duration-200 focus:ring-2 focus:ring-opacity-50 focus:outline-none mr-2 checked:bg-green-800 checked:border-green-900"
                 />
                 <span>🌙 Night Shift</span>
-                <span className="ml-1 text-xs text-gray-500">(₹300)</span>
+                <span className="ml-1 text-xs text-gray-500">(₹250)</span>
               </div>
             </label>
 
