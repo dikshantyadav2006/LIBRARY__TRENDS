@@ -39,7 +39,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
             animate={{ backgroundPosition: "200% center" }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           >
-            Learning Library
+            Sai Library
           </motion.span>
         </motion.h1>
 

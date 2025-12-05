@@ -1,33 +1,25 @@
-import axios from "axios";
 import profile from "../../assets/images/profile.jpg";
 
-// ✅ Fetch profile picture function
+// Fetches the profile-pic endpoint which now returns JSON { profilePic: string }
+// Returns the profile URL or the default image.
 const FetchProfilePicture = async (id) => {
-  if (!id) return profile; // Return default image if no ID is provided
+  if (!id) return profile;
   const api = import.meta.env.VITE_API_BASE_URL;
-  try {
-    const response = await axios.get(
-      `${api}/student/profile-pic/${id}`,
-      { responseType: "arraybuffer" }
-    );
-    // console.log(response);
-    const base64String = arrayBufferToBase64(response.data);
-    const mimeType = response.headers["content-type"];
-    return `data:${mimeType};base64,${base64String}`;
-  } catch (error) {
-    // console.error("Error fetching image for user:", id, error);
-    return profile; // Return default image if fetching fails
-  }
-};
 
-// ✅ Helper function to convert ArrayBuffer to Base64
-const arrayBufferToBase64 = (buffer) => {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  try {
+    const res = await fetch(`${api}/student/profile-pic/${id}`, {
+      credentials: "include",
+    });
+
+    if (!res.ok) return profile;
+
+    const json = await res.json();
+    // Expecting { profilePic: "https://res.cloudinary.com/..." }
+    if (json && json.profilePic) return json.profilePic;
+    return profile;
+  } catch (err) {
+    return profile;
   }
-  return btoa(binary);
 };
 
 export default FetchProfilePicture;

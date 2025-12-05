@@ -8,14 +8,15 @@ const Footer = () => {
       avatar: "👨‍💼",
       gradient: "from-teal-500 to-cyan-500",
     },
-   
+
     {
       name: "Divakar Yadav",
       role: "",
-      mobile: "+91 9458708008",
+      mobile: "+91 8181856378",
       avatar: "🎧",
       gradient: "from-orange-500 to-red-500",
-    }, {
+    },
+    {
       name: "Dikshant Yadav",
       role: "",
       mobile: "+91 7081884742",
@@ -46,14 +47,20 @@ const Footer = () => {
                 className="group flex items-center gap-4 p-3 rounded-xl bg-[--light-color] dark:bg-[--dark-color] hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
               >
                 {/* Avatar */}
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${contact.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform`}>
+                <div
+                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${contact.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform`}
+                >
                   {contact.avatar}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-800 dark:text-gray-100">{contact.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{contact.role}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">
+                    {contact.name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {contact.role}
+                  </p>
                 </div>
 
                 {/* Phone */}
@@ -76,7 +83,9 @@ const Footer = () => {
                 ✉️
               </span>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Email us at</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Email us at
+                </p>
                 <a
                   href="mailto:dikshantyadav2024@gmail.com"
                   className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
@@ -104,6 +113,14 @@ const Footer = () => {
               className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"
             >
               <span>💬</span> WhatsApp
+            </a>{" "}
+            <a
+              href="https://chat.whatsapp.com/BtB9bgCQVwVCoRuUyzLphK"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-md"
+            >
+              <span>💬</span> WhatsApp GROUP
             </a>
           </div>
 
@@ -113,9 +130,13 @@ const Footer = () => {
               <span>📍</span> Address
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Ataria Sitapur, Sitapur Road<br />
-              Near Sai Hardware & Mishra Brother Store<br />
-              <span className="font-medium">Sidhauli, Sitapur, UP - 261303</span>
+              Ataria Sitapur, Sitapur Road
+              <br />
+              Near Sai Hardware & Mishra Brother Store
+              <br />
+              <span className="font-medium">
+                Sidhauli, Sitapur, UP - 261303
+              </span>
             </p>
           </div>
         </div>
@@ -126,20 +147,10 @@ const Footer = () => {
             📍 Find Us
           </h3>
           <div className="w-full h-[250px] md:h-[300px] rounded-lg overflow-hidden mt-2">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3548.8!2d80.8476!3d27.2833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399f0b!2sSidhauli%2C%20Sitapur%2C%20Uttar%20Pradesh%20261303!5e0!3m2!1sen!2sin!4v1700000000000"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Shai Library Location"
-              className="rounded-lg"
-            ></iframe>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3549.688548784714!2d80.860822!3d27.166087899999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39994b00680b90af%3A0xff2f1b4937285c97!2sSai%20Library!5e0!3m2!1sen!2sin!4v1764951127728!5m2!1sen!2sin" width="600" height="450" loading="lazy"></iframe>
           </div>
           <a
-            href="https://maps.app.goo.gl/JHfJmSFodXustoNK9"
+            href="https://maps.app.goo.gl/MNJSJbVCfTdvGJio9"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"

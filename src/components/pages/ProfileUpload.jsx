@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import FetchProfilePicture from "../fetchProfilePicture/FetchProfilePicture";
+import { getUserData } from "../../utils/authApi";
 
-const ProfileUpload = ({ userId ,setLoggedInUser }) => {
+const ProfileUpload = ({ userId, setLoggedInUser }) => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
   const api = import.meta.env.VITE_API_BASE_URL;
 
   // 🟢 Handle File Selection
@@ -12,85 +15,148 @@ const ProfileUpload = ({ userId ,setLoggedInUser }) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
-      setPreview(URL.createObjectURL(file)); // Show preview before upload
+      setPreview(URL.createObjectURL(file));
     }
   };
 
   // 🟢 Upload Image to Backend
   const uploadImage = async () => {
     if (!image) {
-      alert("Please select an image first!");
+      setToast({ type: "error", message: "Please select an image first!" });
       return;
     }
 
     const formData = new FormData();
     formData.append("profilePic", image);
 
+    setLoading(true);
     try {
       await axios.post(`${api}/student/upload-profile/${userId}`, formData);
-      alert("Profile picture uploaded successfully!");
-      fetchProfilePic(); // Refresh image after upload
-    
-    } catch (error) {
-      console.error("Upload failed", error);
-    }
-  };
 
-  // 🟢 Fetch Profile Picture from Backend
-  const fetchProfilePic = async () => {
-    if (!userId) return; // Prevent fetching when userId is null
-   
-    const profilePic = await FetchProfilePicture(userId);
-    setLoggedInUser(prevUser => ({...prevUser, profilePic: preview})); // Update loggedInUser with new profilePic
-    setPreview(profilePic);
-  };
-  
-  // 🔹 Helper function to convert ArrayBuffer to Base64
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  };
-  
+      // Success toast
+      setToast({ type: "success", message: "Profile picture uploaded successfully!" });
 
-  // ✅ Run useEffect only when `userId` is set
-  useEffect(() => {
-    if (userId) {
+      // Refetch full updated user data
+      const userData = await getUserData();
+
+      if (userData.data) {
+        const updatedUser = {
+          ...userData.data,
+          profilePic: userData.data.profilePic, // Cloudinary URL
+        };
+
+        // Update logged-in user
+        setLoggedInUser(updatedUser);
+      }
+
+      // Refresh profile preview
       fetchProfilePic();
+    } catch (error) {
+      setToast({ type: "error", message: "Upload failed. Please try again." });
+    } finally {
+      setLoading(false);
     }
-  }, [userId]); // ✅ This ensures the effect runs only when `userId` is updated
+  };
+
+  // 🟢 Fetch Profile Picture
+  const fetchProfilePic = async () => {
+    if (!userId) return;
+
+    const url = await FetchProfilePicture(userId);
+    setLoggedInUser((prev) => ({ ...prev, profilePic: url }));
+    setPreview(url);
+  };
+
+  // Fetch on userId update
+  useEffect(() => {
+    if (userId) fetchProfilePic();
+  }, [userId]);
+
+  // Auto hide toast after 3 sec
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   return (
-    <div className="flex flex-col items-center p-5 bg-[--primary-light-color] dark:bg-[--primary-dark-color]  rounded-lg shadow-md">
+    <div className="flex flex-col items-center p-5 bg-[--primary-light-color] dark:bg-[--primary-dark-color] rounded-lg shadow-md">
+      
       <h2 className="text-lg font-bold mb-3">Upload Profile Picture</h2>
 
-      {/* Display Image */}
+      {/* Profile Preview */}
       {preview ? (
-        <img src={preview} alt="Profile" className="w-24 h-24 rounded-full mb-3 border object-cover" />
+        <img
+          src={preview}
+          alt="Profile"
+          className="w-24 h-24 rounded-full mb-3 border object-cover"
+        />
       ) : (
         <p>No profile picture</p>
       )}
 
-      {/* Upload Button */}
-      <label className=" rounded-full transform hover:scale-105 -translate-y-[100%] p-1 cursor-pointer bg-[--secondary-light-color] ">
+      {/* Upload Icon Button */}
+      <label className="rounded-full transform hover:scale-105 -translate-y-[100%] p-1 cursor-pointer bg-[--secondary-light-color]">
         <img
-        // edit this src to the upload icon you want to use
           src="https://img.icons8.com/?size=512w&id=24717&format=png"
           alt="Upload"
           className="w-7"
         />
-        {/* Hidden File Input */}
-         <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2 opacity-0 hidden" />
-
-      <input type="file" accept="image/*" onChange={handleFileChange} className="mb-2 opacity-0 hidden" />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </label>
-      <button onClick={uploadImage} className="bg-blue-500 text-white px-4 py-2 rounded-md">
-        Upload
+
+      {/* Upload Button */}
+      <button
+        onClick={uploadImage}
+        disabled={loading}
+        className={`bg-blue-500 text-white px-4 py-2 rounded-md transition-opacity ${
+          loading ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+        }`}
+      >
+        {loading ? (
+          <span className="flex items-center space-x-2">
+            <svg
+              className="animate-spin h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+            <span>Uploading...</span>
+          </span>
+        ) : (
+          "Upload"
+        )}
       </button>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-white ${
+            toast.type === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 };
