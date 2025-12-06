@@ -125,6 +125,18 @@ const SeatDetails = ({ loggedInUser }) => {
     fetchSeatDetails(seat.seatNumber);
   };
 
+  // Close seat details (used by mobile-only close button)
+  const closeSeatDetails = () => {
+    setSelectedSeat(null);
+    setSeatDetails(null);
+    setSelectedShifts([]);
+    setPriceInfo(null);
+    setError("");
+    setSuccessMessage("");
+    setShowDayOnlyPopup(false);
+    setPendingDaySelection(false);
+  };
+  
   const handleMonthChange = (monthData) => {
     setSelectedMonth(monthData.month);
     setSelectedYear(monthData.year);
@@ -340,11 +352,11 @@ const SeatDetails = ({ loggedInUser }) => {
     if (!dayAvailable && !nightAvailable) return "bg-red-600 text-white"; // Fully occupied
 
     if (dayAvailable && nightAvailable) {
-      return "bg-gradient-to-r from-green-500 to-green-800 text-white"; // Both available (Green gradient)
+      return "bg-gradient-to-r from-green-500 to-black text-white"; // Both available (Green gradient)
     }
 
     if (dayAvailable) return "bg-green-500 text-white"; // Day available (Green)
-    if (nightAvailable) return "bg-green-800 text-white"; // Night available (Dark Green)
+    if (nightAvailable) return "bg-green-900 text-white"; // Night available (Dark Green)
 
     return "bg-red-600 text-white";
   };
@@ -567,10 +579,18 @@ const SeatDetails = ({ loggedInUser }) => {
       <div className="flex flex-col md:flex-row gap-4 flex-wrap justify-between">
         {/* Seat Details First & Sticky on Mobile */}
         {selectedSeat && seatDetails && (
-          <div className="w-full md:w-1/3 p-4  rounded-lg  shadow sticky top-[10vh] z-10 bg-[--primary-light-color] dark:bg-[--primary-dark-color]">
-            <h3 className="text-xl font-[font1] tracking-wider font-bold">
-              Seat Details
-            </h3>
+          <div className="relative w-full md:w-1/3 p-4  rounded-lg  shadow sticky top-[10vh] z-10 bg-[--primary-light-color] dark:bg-[--primary-dark-color]">
+            {/* Mobile-only close button */}
+            <button
+              onClick={closeSeatDetails}
+              title="Close details"
+              className="md:hidden absolute top-3 right-3 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
+            >
+              ✕
+            </button>
+             <h3 className="text-xl font-[font1] tracking-wider font-bold">
+               Seat Details
+             </h3>
             <p className="text-md mt-2">
               <strong>Seat Number:</strong> {getFloor(selectedSeat.seatNumber) === 1 ? selectedSeat.seatNumber : selectedSeat.seatNumber - 25}
               <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
