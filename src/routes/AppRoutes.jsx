@@ -11,11 +11,14 @@ import UserDetail from "../components/admin/adminDashboard/UserDetail";
 import EditUserProfile from "../components/user/EditUserProfile/EditUserProfile";
 import CompleteProfile from "../components/user/CompleteProfile/CompleteProfile";
 import AdminUserSelector from "../components/admin/AdminUserSelector/AdminUserSelector";
+import Policies from "../components/policies/Policies";
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
     <Route path="/" element={<Home loggedInUser={user} isDarkMode={isDarkMode} />} />
     <Route path="/feedback" element={<Feedback loggedInUser={user} />} />
+    <Route path="/privacypolicy" element={<Policies/>} />
+    <Route path="/termsandconditions" element={<Policies/>} />
     <Route
       path="/login"
       element={
