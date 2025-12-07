@@ -461,8 +461,8 @@ const SeatDetails = ({ loggedInUser }) => {
         key: data.key,
         amount: data.amount.toString(),
         currency: data.currency,
-        name: "SHAI Library",
-        description: `Seat ${data.seatNumber} - ${data.shiftTypes.join(", ")} (${data.monthLabel || monthLabel})`,
+        name: "Sai Library",
+        description: ` USER: ${loggedInUser?.username} ${" "} Seat ${data.seatNumber} - ${data.shiftTypes.join(", ")} (${data.monthLabel || monthLabel})`,
         order_id: data.orderId,
         handler: async function (response) {
           try {
@@ -734,15 +734,37 @@ const SeatDetails = ({ loggedInUser }) => {
                   {successMessage}
                 </p>
               )}
+              {/* BOOKING BUTTON ---------------------------------- */}
               <button
                 onClick={handleBookNow}
                 disabled={
-                  isBooking || selectedShifts.length === 0 || !selectedSeat
+                  isBooking || selectedShifts.length === 0 || !selectedSeat || loggedInUser?.isAdmin
                 }
                 className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isBooking ? "Processing..." : `Book Now - ₹${totalPrice}`}
               </button>
+              {loggedInUser?.isAdmin && (
+  <button
+   disabled={
+                  isBooking || selectedShifts.length === 0 || !selectedSeat
+                }
+    onClick={() =>
+      navigate("/admin/bookseat", {
+        state: {
+          seatNumber: selectedSeat?.seatNumber,
+          month: selectedMonth,
+          year: selectedYear,
+          shiftTypes: selectedShifts, // array of selected shifts
+        },
+      })
+    }
+    className="mt-4 w-full bg-white text-black font-bold py-2 rounded-md border"
+  >
+    Book For User (Only Admin)
+  </button>
+)}
+
 
               {/* Admin Block/Unblock Controls */}
               <AdminBlockControls
@@ -1178,7 +1200,7 @@ const AdminBlockControls = ({
           {isProcessing ? "Processing..." : `🚫 Block for ${selectedBlockMonths.length} month(s)`}
         </button>
       )}
-
+        
       {/* Quick Actions */}
       <div className="flex gap-2 mt-2">
         <button

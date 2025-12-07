@@ -10,6 +10,7 @@ import AdminDashboard from "../components/admin/adminDashboard/AdminDashboard";
 import UserDetail from "../components/admin/adminDashboard/UserDetail";
 import EditUserProfile from "../components/user/EditUserProfile/EditUserProfile";
 import CompleteProfile from "../components/user/CompleteProfile/CompleteProfile";
+import AdminUserSelector from "../components/admin/AdminUserSelector/AdminUserSelector";
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
@@ -54,6 +55,7 @@ const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDark
       element={
         user?.isAdmin ? (
           <AdminDashboard loading={loading} user={user} setUser={setUser} handleLogout={handleLogout} />
+          
         ) : (
           <Navigate to="/login" />
         )
@@ -62,6 +64,10 @@ const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDark
     <Route
       path="/admin/user/:userID"
       element={user?.isAdmin ? <UserDetail /> : <Navigate to="/login" />}
+    />
+    <Route
+      path="/admin/bookseat"
+      element={user?.isAdmin ? <AdminUserSelector loggedInUser={user} /> : <Navigate to="/login" />}
     />
     <Route
       path="/dashboard/edit-user/:userId"
