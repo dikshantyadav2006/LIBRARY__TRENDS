@@ -738,7 +738,7 @@ const SeatDetails = ({ loggedInUser }) => {
               <button
                 onClick={handleBookNow}
                 disabled={
-                  isBooking || selectedShifts.length === 0 || !selectedSeat || loggedInUser?.isAdmin || true
+                  isBooking || selectedShifts.length === 0 || !selectedSeat || loggedInUser?.isAdmin
                 }
                 className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
