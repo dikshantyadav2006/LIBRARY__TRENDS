@@ -579,7 +579,7 @@ const SeatDetails = ({ loggedInUser }) => {
       <div className="flex flex-col md:flex-row gap-4 flex-wrap justify-between">
         {/* Seat Details First & Sticky on Mobile */}
         {selectedSeat && seatDetails && (
-          <div className="relative w-full md:w-1/3 p-4  rounded-lg  shadow sticky top-[10vh] z-10 bg-[--primary-light-color] dark:bg-[--primary-dark-color]">
+          <div className=" w-full md:w-1/3 p-4  rounded-lg  shadow sticky top-[10vh] z-10 bg-[--primary-light-color] dark:bg-[--primary-dark-color]">
             {/* Mobile-only close button */}
             <button
               onClick={closeSeatDetails}
@@ -738,7 +738,7 @@ const SeatDetails = ({ loggedInUser }) => {
               <button
                 onClick={handleBookNow}
                 disabled={
-                  isBooking || selectedShifts.length === 0 || !selectedSeat || loggedInUser?.isAdmin
+                  isBooking || selectedShifts.length === 0 || !selectedSeat || loggedInUser?.isAdmin || true
                 }
                 className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
               >
