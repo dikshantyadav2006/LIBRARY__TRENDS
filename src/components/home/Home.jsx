@@ -1,15 +1,21 @@
-import { useRef } from "react";
+import { useRef ,useState,useEffect} from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import FocusSection from "./sections/FocusSection.jsx";
 import VelocitySection from "./sections/VelocitySection.jsx";
 import SeatDetails from "../seatDetails/SeatDetails.jsx";
 import { Link } from "react-router-dom";
 const Home = ({isDarkMode,loggedInUser}) => {
-  const containerRef = useRef(null);
+   const containerRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
-  // Detect system dark mode or use theme preference
-  
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsDesktop(window.innerWidth >= 768); // md breakpoint
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
   const y = useTransform(scrollYProgress, [0, 1], [0, 400]);
@@ -144,6 +150,12 @@ const Home = ({isDarkMode,loggedInUser}) => {
               </Link>
             </div>
           )}
+           <Link to="/blogs" className="group">
+        <button className="w-full mt-2 sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg">
+           <span className="text-lg">📝</span>
+           <span>Blogs</span>
+        </button>
+    </Link>
         </div>
       </motion.section>
 
@@ -159,10 +171,12 @@ const Home = ({isDarkMode,loggedInUser}) => {
         <FocusSection isDarkMode={isDarkMode} />
       </section>
 
-      {/* Scroll Velocity Rotating Text Section */}
-      <section ref={scrollContainerRef} className="relative z-10" style={{ position: "relative" }}>
-        <VelocitySection scrollContainerRef={scrollContainerRef} />
-      </section>
+        {/* Scroll Velocity Rotating Text Section */}
+      {isDesktop && (
+        <section ref={scrollContainerRef} className="relative z-10">
+          <VelocitySection scrollContainerRef={scrollContainerRef} />
+        </section>
+      )}
 
       {/* Feedback Section - Redesigned */}
       <section className="relative z-10 py-16 px-4">

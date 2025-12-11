@@ -12,6 +12,7 @@ import EditUserProfile from "../components/user/EditUserProfile/EditUserProfile"
 import CompleteProfile from "../components/user/CompleteProfile/CompleteProfile";
 import AdminUserSelector from "../components/admin/AdminUserSelector/AdminUserSelector";
 import Policies from "../components/policies/Policies";
+import Blogs from "../components/blogs/Blogs";
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
@@ -19,6 +20,7 @@ const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDark
     <Route path="/feedback" element={<Feedback loggedInUser={user} />} />
     <Route path="/privacypolicy" element={<Policies/>} />
     <Route path="/termsandconditions" element={<Policies/>} />
+    <Route path="/blogs" element={<Blogs loggedInUser={user} />} />
     <Route
       path="/login"
       element={
