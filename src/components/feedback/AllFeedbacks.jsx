@@ -3,9 +3,68 @@ import { io } from "socket.io-client";
 import feedbackApi from "./feedbackApi";
 import likedImage from "../../assets/images/liked.png";
 import likeImage from "../../assets/images/like.png";
+import defaultProfile from "../../assets/images/profile.jpg";
+import getProfileUrl from "../fetchProfilePicture/FetchProfilePicture";
+
 const api = import.meta.env.VITE_API_BASE_URL;
 
 const socket = io(api); // Update with your server URL
+const InlineAvatar = ({ user }) => {
+  const [img, setImg] = useState(defaultProfile);
+  const [showPreview, setShowPreview] = useState(false);
+  const timerRef = React.useRef(null);
+
+  useEffect(() => {
+    const id = typeof user === "object" ? user?._id : user;
+    if (!id) return;
+
+    getProfileUrl(id).then(setImg);
+  }, [user]);
+
+  const handleMouseEnter = () => {
+    timerRef.current = setTimeout(() => {
+      setShowPreview(true);
+    }, 1000); // ⏱️ 1 second delay
+  };
+
+  const handleMouseLeave = () => {
+    clearTimeout(timerRef.current);
+    setShowPreview(false);
+  };
+
+  return (
+    <span
+      className="relative inline-block mr-1"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* SMALL AVATAR */}
+      <img
+        src={img}
+        alt="user"
+        className="w-5 h-5 rounded-full object-cover inline-block cursor-pointer"
+      />
+
+      {/* HOVER PREVIEW */}
+      {showPreview && (
+        <div className="absolute z-50 top-7 left-0 bg-black/70 p-2 rounded-lg shadow-xl">
+          <img
+            src={img}
+            alt="preview"
+            className="
+              object-contain
+              max-h-[60vh]
+              max-w-[90vw]
+              md:max-h-[50vh]
+              md:max-w-[420px]
+              rounded-lg
+            "
+          />
+        </div>
+      )}
+    </span>
+  );
+};
 
 const AllFeedbacks = ({ loggedInUser }) => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -93,7 +152,7 @@ const AllFeedbacks = ({ loggedInUser }) => {
         >
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-blue-700">
-              @{feedback.user?.username || "Anonymous"}
+              <InlineAvatar user={feedback.user} />{feedback.user?.username || "Anonymous"}
             </h3>
             <button
               onClick={() => handleLike(feedback._id)}
@@ -124,7 +183,7 @@ const AllFeedbacks = ({ loggedInUser }) => {
             <div className="mt-4 space-y-3">
               {feedback.comments?.map((c) => (
                 <div key={c._id} className="ml-4 text-sm border-l pl-2 pb-3">
-                  <div className="font-medium">@{c.user?.username || "user"}</div>
+                  <div className="font-medium">  <InlineAvatar user={c.user} />{c.user?.username || "user"}</div>
                   <div>{c.message}</div>
 
                   {c.replies?.map((r, i) => (
@@ -132,7 +191,7 @@ const AllFeedbacks = ({ loggedInUser }) => {
                       key={i}
                       className="ml-4 mt-1 text-xs text-gray-600 dark:text-[--secondry-light-color]"
                     >
-                      ↪ @{r.user?.username || "user"}: {r.message}
+                      ↪  <InlineAvatar user={r.user} />{r.user?.username || "user"}: {r.message}
                     </div>
                   ))}
 
