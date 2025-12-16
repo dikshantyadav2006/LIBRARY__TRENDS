@@ -150,12 +150,68 @@ const Home = ({isDarkMode,loggedInUser}) => {
               </Link>
             </div>
           )}
-           <Link to="/blogs" className="group">
+           {/* <Link to="/blogs" className="group">
         <button className="w-full mt-2 sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg">
            <span className="text-lg">📝</span>
            <span>Blogs</span>
         </button>
-    </Link>
+    </Link> */}
+    <Link to="/feedback" className="group relative w-full sm:w-auto mt-2">
+  <button
+    className=" mt-2
+      relative overflow-hidden
+      w-full flex items-center justify-center gap-3
+      px-7 py-3 rounded-2xl
+      font-bold text-white
+      bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500
+      transition-all duration-300
+      hover:scale-105 hover:shadow-[0_0_35px_rgba(168,85,247,0.8)]
+      active:scale-95
+    "
+  >
+    {/* ✨ MOVING SHINE */}
+    <span
+      className="
+        absolute inset-0
+        bg-gradient-to-r from-transparent via-white/30 to-transparent
+        translate-x-[-100%]
+        group-hover:translate-x-[100%]
+        transition-transform duration-700
+      "
+    />
+
+    {/* ICON */}
+    <span className="text-xl animate-bounce">💬</span>
+
+    {/* TEXT */}
+    <span className="relative z-10 tracking-wide">
+      Give Feedback
+    </span>
+
+    {/* ARROW */}
+    <span
+      className="
+        relative z-10
+        transition-transform duration-300
+        group-hover:translate-x-2
+      "
+    >
+      ➜
+    </span>
+  </button>
+
+  {/* 🔮 GLOW RING */}
+  <div
+    className="
+      absolute inset-0 -z-10
+      rounded-2xl blur-2xl
+      bg-gradient-to-r from-pink-500/40 via-purple-500/40 to-indigo-500/40
+      opacity-70
+      animate-pulse
+    "
+  />
+</Link>
+
         </div>
       </motion.section>
 

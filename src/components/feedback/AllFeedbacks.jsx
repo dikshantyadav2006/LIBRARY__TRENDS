@@ -24,7 +24,7 @@ const InlineAvatar = ({ user }) => {
   const handleMouseEnter = () => {
     timerRef.current = setTimeout(() => {
       setShowPreview(true);
-    }, 1000); // ⏱️ 1 second delay
+    }, 100); // ⏱️ 1 second delay
   };
 
   const handleMouseLeave = () => {
@@ -39,29 +39,48 @@ const InlineAvatar = ({ user }) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* SMALL AVATAR */}
-      <img
-        src={img}
-        alt="user"
-        className="w-5 h-5 rounded-full object-cover inline-block cursor-pointer"
-      />
+     <div className="
+  inline-block p-[2px] rounded-full
+  bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500
+  bg-[length:200%_200%]
+  animate-gradientMove
+  hover:scale-110 hover:shadow-[0_0_18px_rgba(168,85,247,0.8)]
+  transition-all duration-300
+">
+  <img
+    src={img}
+    alt="user"
+    className="w-10 h-10 rounded-full object-cover bg-black cursor-pointer"
+  />
+</div>
+
 
       {/* HOVER PREVIEW */}
-      {showPreview && (
-        <div className="absolute z-50 top-7 left-0 bg-black/70 p-2 rounded-lg shadow-xl">
-          <img
-            src={img}
-            alt="preview"
-            className="
-              object-contain
-              max-h-[60vh]
-              max-w-[90vw]
-              md:max-h-[50vh]
-              md:max-w-[420px]
-              rounded-lg
-            "
-          />
-        </div>
-      )}
+     {showPreview && (
+  <div
+    className="
+      absolute z-50 top-9 left-0
+      bg-black/70 p-2 rounded-xl shadow-2xl
+      backdrop-blur-sm
+      animate-previewIn
+      origin-top-left
+    "
+  >
+    <img
+      src={img}
+      alt="preview"
+      className="
+        object-contain
+        max-h-[60vh]
+        max-w-[90vw]
+        md:max-h-[50vh]
+        md:max-w-[420px]
+        rounded-lg
+      "
+    />
+  </div>
+)}
+
     </span>
   );
 };
@@ -145,56 +164,135 @@ const AllFeedbacks = ({ loggedInUser }) => {
 
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6">
-      {feedbacks.map((feedback) => (
+      {feedbacks.map((feedback, idx) => (
         <div
           key={feedback._id}
-          className="bg-[--primary-light-color] dark:bg-[--primary-dark-color] text-[--primary-dark-color] dark:text-[--primary-light-color]  shadow rounded-xl p-5 border border-gray-200"
+          className="
+  group relative
+  bg-[--primary-light-color] dark:bg-[--primary-dark-color]
+  text-[--primary-dark-color] dark:text-[--primary-light-color]
+  rounded-2xl p-5 border border-gray-200
+  shadow-md
+  transition-shadow duration-300
+  hover:shadow-2xl
+"
+
+          style={{ animationDelay: `${idx * 60}ms` }}
         >
+          {/* TOP ROW */}
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-blue-700">
-              <InlineAvatar user={feedback.user} />{feedback.user?.username || "Anonymous"}
-            </h3>
+            {/* USER */}
+            <div className="flex items-center gap-2 group">
+              <InlineAvatar user={feedback.user} />
+
+              <span
+                className="
+                  text-lg font-semibold
+                  text-blue-700 dark:text-blue-400
+                  transition-all duration-300
+                  group-hover:tracking-wide
+                  group-hover:text-purple-600 -translate-y-1/4
+                "
+              >
+                {feedback.user?.username || "Anonymous"}
+              </span>
+            </div>
+
+            {/* LIKE */}
             <button
               onClick={() => handleLike(feedback._id)}
               disabled={feedback.user?._id === loggedInUser?._id}
-              className="text-sm  hover:underline flex items-center gap-1"
+              className="
+                flex items-center gap-1 text-sm
+                transition-transform duration-200
+                hover:scale-110
+                active:scale-95
+              "
             >
               <img
-                src={feedback.likes.includes(loggedInUser?._id) ? likedImage : likeImage}
+                src={
+                  feedback.likes.includes(loggedInUser?._id)
+                    ? likedImage
+                    : likeImage
+                }
                 alt="like"
                 className="w-5 h-5"
               />
-              {feedback.likes.length}
+              <span className="font-medium">{feedback.likes.length}</span>
             </button>
           </div>
 
-          <p className="mt-2 ">{feedback.message}</p>
+          {/* MESSAGE */}
+          <p
+            className="
+              mt-2 text-sm leading-relaxed
+              transition-all duration-300
+              group-hover:translate-x-1
+            "
+          >
+            {feedback.message}
+          </p>
 
+          {/* COMMENT TOGGLE */}
           <button
             onClick={() =>
-              setActiveComment(activeComment === feedback._id ? null : feedback._id)
+              setActiveComment(
+                activeComment === feedback._id ? null : feedback._id
+              )
             }
-            className="text-sm mt-3 text-gray-500 hover:text-gray-700 dark:hover:text-[--secondry-light-color]"
+            className="
+              mt-3 text-sm flex items-center gap-1
+              text-gray-500
+              transition-all duration-200
+              hover:text-purple-600 hover:translate-x-1
+            "
           >
             💬 Comments ({feedback.comments?.length || 0})
           </button>
 
+          {/* COMMENTS */}
           {activeComment === feedback._id && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4 animate-previewIn">
               {feedback.comments?.map((c) => (
-                <div key={c._id} className="ml-4 text-sm border-l pl-2 pb-3">
-                  <div className="font-medium">  <InlineAvatar user={c.user} />{c.user?.username || "user"}</div>
-                  <div>{c.message}</div>
+                <div
+                  key={c._id}
+                  className="
+                    ml-4 pl-3 border-l
+                    transition-all duration-300
+                    hover:border-purple-400
+                  "
+                >
+                  {/* COMMENT USER */}
+                  <div className="flex items-center gap-2 font-medium group">
+                    <InlineAvatar user={c.user} />
+                    <span className="transition group-hover:text-blue-600">
+                      {c.user?.username || "user"}
+                    </span>
+                  </div>
 
+                  {/* COMMENT TEXT */}
+                  <p className="text-sm mt-1">{c.message}</p>
+
+                  {/* REPLIES */}
                   {c.replies?.map((r, i) => (
                     <div
                       key={i}
-                      className="ml-4 mt-1 text-xs text-gray-600 dark:text-[--secondry-light-color]"
+                      className="
+                        ml-4 mt-1 text-xs
+                        text-gray-600 dark:text-[--secondry-light-color]
+                        transition-all duration-200
+                        hover:translate-x-1 hover:text-purple-500
+                      "
                     >
-                      ↪  <InlineAvatar user={r.user} />{r.user?.username || "user"}: {r.message}
+                      ↪ <InlineAvatar user={r.user} />
+                      <span className="ml-1 font-medium">
+                        {r.user?.username || "user"}
+                      </span>
+                      : {r.message}
                     </div>
                   ))}
 
+                  {/* REPLY BUTTON */}
                   <button
                     onClick={() =>
                       setReplyToggles({
@@ -202,15 +300,19 @@ const AllFeedbacks = ({ loggedInUser }) => {
                         [c._id]: !replyToggles[c._id],
                       })
                     }
-                    className="text-xs mt-1 text-blue-500 hover:underline"
+                    className="
+                      mt-1 text-xs text-blue-500
+                      transition hover:underline hover:tracking-wide
+                    "
                   >
                     ↩ Reply
                   </button>
 
+                  {/* REPLY INPUT */}
                   {replyToggles[c._id] && (
-                    <div className="mt-2 ml-4">
+                    <div className="mt-2 ml-4 animate-previewIn">
                       <textarea
-                         maxLength="300"
+                        maxLength="300"
                         rows="1"
                         placeholder="Write a reply..."
                         value={replyInputs[c._id] || ""}
@@ -220,11 +322,21 @@ const AllFeedbacks = ({ loggedInUser }) => {
                             [c._id]: e.target.value,
                           })
                         }
-                        className="w-full border rounded-md p-1 text-xs text-black"
+                        className="
+                          w-full border rounded-md p-1
+                          text-xs text-black
+                          focus:ring-2 focus:ring-purple-400
+                        "
                       />
                       <button
-                        onClick={() => handleReplySubmit(feedback._id, c._id)}
-                        className="mt-1 px-2 py-0.5 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        onClick={() =>
+                          handleReplySubmit(feedback._id, c._id)
+                        }
+                        className="
+                          mt-1 px-2 py-0.5 text-xs
+                          bg-green-600 text-white rounded
+                          transition hover:bg-green-700 hover:scale-105
+                        "
                       >
                         Reply
                       </button>
@@ -233,9 +345,10 @@ const AllFeedbacks = ({ loggedInUser }) => {
                 </div>
               ))}
 
-              <div className="ml-4">
+              {/* ADD COMMENT */}
+              <div className="ml-4 animate-previewIn">
                 <textarea
-                 maxLength="300"
+                  maxLength="300"
                   rows="2"
                   placeholder="Write a comment..."
                   value={newComments[feedback._id] || ""}
@@ -245,11 +358,19 @@ const AllFeedbacks = ({ loggedInUser }) => {
                       [feedback._id]: e.target.value,
                     })
                   }
-                  className="w-full border rounded-md p-2 text-sm text-black"
+                  className="
+                    w-full border rounded-md p-2
+                    text-sm text-black
+                    focus:ring-2 focus:ring-blue-400
+                  "
                 />
                 <button
                   onClick={() => handleCommentSubmit(feedback._id)}
-                  className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="
+                    mt-1 px-3 py-1 text-sm
+                    bg-blue-600 text-white rounded
+                    transition-all hover:bg-blue-700 hover:scale-105
+                  "
                 >
                   Submit
                 </button>
@@ -261,6 +382,7 @@ const AllFeedbacks = ({ loggedInUser }) => {
     </div>
   );
 };
+
 
 // FeedbackSkeleton.jsx or wherever you define it
 const FeedbackSkeleton = () => {
