@@ -48,7 +48,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
       inline-block
       bg-gradient-to-r
       from-teal-400
-      via-violet-500
+      
       via-pink-500
       to-teal-400
       bg-clip-text
@@ -66,7 +66,7 @@ const Home = ({isDarkMode,loggedInUser}) => {
         inset-0
         bg-gradient-to-r
         from-teal-400
-        via-violet-500
+       
         via-pink-500
         to-teal-400
         blur-xl
