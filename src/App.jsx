@@ -81,9 +81,30 @@ const App = () => {
     setLoggedInUser(user);
   };
 
+  useEffect(() => {
+    const savedMode = localStorage.getItem("isdarkmode");
+
+    if (savedMode === null) {
+      // Agar value nahi hai, default true set karo
+      localStorage.setItem("isdarkmode", "true");
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      // Agar value hai to use parse karke set karo
+      const mode = savedMode === "true";
+      setIsDarkMode(mode);
+      if (mode) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark");
+    setIsDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("isdarkmode", newMode.toString());
+      document.documentElement.classList.toggle("dark", newMode);
+      return newMode;
+    });
   };
   // ===================================================
   useEffect(() => {
