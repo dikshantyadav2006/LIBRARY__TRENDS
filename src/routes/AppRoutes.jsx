@@ -13,6 +13,7 @@ import CompleteProfile from "../components/user/CompleteProfile/CompleteProfile"
 import AdminUserSelector from "../components/admin/AdminUserSelector/AdminUserSelector";
 import Policies from "../components/policies/Policies";
 import Blogs from "../components/blogs/Blogs";
+import NotFound from "../components/pages/NotFound";
 
 const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDarkMode ,loggedInUser ,setLoggedInUser}) => (
   <Routes>
@@ -95,6 +96,7 @@ const AppRoutes = ({ user, handleUserSet, setUser, handleLogout, loading ,isDark
         )
       }
     />
+    <Route path="*" element={<NotFound isDarkMode={isDarkMode}/>} />
   </Routes>
 );
 

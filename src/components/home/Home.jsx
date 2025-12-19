@@ -32,22 +32,51 @@ const Home = ({isDarkMode,loggedInUser}) => {
         className="relative z-10 flex flex-col items-center justify-evenly h-[100vh] text-center px-4 "
       >
         {/* Animated Gradient Heading */}
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-4"
-        >
-          <span className="text-[--dark-color] dark:text-[--light-color]">Welcome to the </span>
-          <motion.span
-            className="inline-block bg-gradient-to-r from-teal-500 via-purple-500 to-pink-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient"
-            initial={{ backgroundPosition: "0% center" }}
-            animate={{ backgroundPosition: "200% center" }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          >
-            Sai Library
-          </motion.span>
-        </motion.h1>
+       <motion.h1
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+  className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-tight"
+>
+  <span className="text-[--dark-color] dark:text-[--light-color]">
+    Welcome to{" "}
+  </span>
+
+  <span
+    className="
+      relative
+      inline-block
+      bg-gradient-to-r
+      from-teal-400
+      via-violet-500
+      via-pink-500
+      to-teal-400
+      bg-clip-text
+      text-transparent
+      bg-[length:200%_auto]
+      animate-gradient
+    "
+  >
+    Sai Library
+
+    {/* subtle glow */}
+    <span
+      className="
+        absolute
+        inset-0
+        bg-gradient-to-r
+        from-teal-400
+        via-violet-500
+        via-pink-500
+        to-teal-400
+        blur-xl
+        opacity-30
+        -z-10
+      "
+    />
+  </span>
+</motion.h1>
+
 
         {/* Animated Tagline */}
         <motion.p
