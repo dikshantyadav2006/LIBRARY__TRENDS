@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getFloorAndSeat } from "./components/utils/utils";
 
 const SeatDetails = ({ loggedInUser }) => {
   // Month/Year selection (like movie theater)
@@ -456,13 +457,15 @@ const SeatDetails = ({ loggedInUser }) => {
       );
 
       const data = createOrderRes.data;
+      const { floor, finalSeat } = getFloorAndSeat(data.seatNumber);
+
 
       const options = {
         key: data.key,
         amount: data.amount.toString(),
         currency: data.currency,
         name: "Sai Library",
-        description: ` USER: ${loggedInUser?.username} ${" "} Seat ${data.seatNumber} - ${data.shiftTypes.join(", ")} (${data.monthLabel || monthLabel})`,
+        description: `user-${loggedInUser?.username} ${" "} Seat-${finalSeat}${floor}-${data.shiftTypes.join(", ")} (${data.monthLabel || monthLabel})`,
         order_id: data.orderId,
         handler: async function (response) {
           try {
